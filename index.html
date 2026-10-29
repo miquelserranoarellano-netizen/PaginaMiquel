@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Miquel Serrano — IA, publicidad y creatividad</title>
-<meta name="description" content="Skills para Claude y campañas creativas para marcas que quieren crecer. Consultoría de IA, publicidad y creatividad desde Terrassa, Barcelona.">
+<title>Miquel Serrano — Páginas web, mantenimiento y vídeos con IA</title>
+<meta name="description" content="Creo páginas web para empresas, me encargo del dominio y el mantenimiento, y produzco vídeos con IA. Terrassa, Barcelona · remoto y presencial.">
 <meta name="theme-color" content="#F5F5F2">
 <meta property="og:type" content="website">
-<meta property="og:title" content="Miquel Serrano — IA útil. Creatividad. Resultados.">
-<meta property="og:description" content="Skills para Claude y campañas creativas para marcas que quieren crecer.">
+<meta property="og:title" content="Miquel Serrano — Webs que venden. Vídeos con IA. Sin líos.">
+<meta property="og:description" content="Páginas web, dominio y mantenimiento, y vídeos con IA para empresas que quieren crecer en internet.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23111'/%3E%3Ctext x='32' y='43' text-anchor='middle' font-family='Arial,sans-serif' font-weight='700' font-size='30' fill='%23F5F5F2'%3EM%3C/text%3E%3Ccircle cx='49' cy='15' r='5' fill='%23D4F26A'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -114,8 +114,18 @@
     font-size: 16px;
     line-height: 1.65;
   }
+  .lead + .lead { margin-top: 14px; }
+  .section-head { max-width: 680px; }
+  .section-head .lead { max-width: 52ch; }
 
   .rule { border: 0; border-top: 1px solid var(--line); margin: 0; }
+
+  .round-icon {
+    display: grid; place-items: center; flex: none;
+    width: 38px; height: 38px; border-radius: 50%;
+    border: 1px solid var(--line-strong);
+  }
+  .round-icon .icon { width: 16px; height: 16px; }
 
   /* ---------- Botones ---------- */
   .btn {
@@ -132,6 +142,10 @@
   .btn-dark:hover { background: #000; }
   .btn-outline { border-color: var(--ink); color: var(--ink); }
   .btn-outline:hover { background: var(--ink); color: #fff; }
+  .btn-light { background: #fff; color: var(--ink); }
+  .btn-light:hover { background: var(--lime); }
+  .btn-ghost-light { border-color: rgba(255, 255, 255, .3); color: #fff; }
+  .btn-ghost-light:hover { border-color: #fff; background: rgba(255, 255, 255, .06); }
   .btn-sm { height: 42px; padding: 0 18px; font-size: 14px; }
   .btn-lime { border: 1.5px solid var(--lime); }
   .btn-lime:hover { background: var(--lime); }
@@ -195,12 +209,12 @@
     margin: 22px 0 26px;
     font-family: var(--font-display);
     font-weight: 600;
-    font-size: clamp(46px, 6.4vw, 84px);
+    font-size: clamp(44px, 5.8vw, 78px);
     line-height: .98;
     letter-spacing: -.048em;
   }
   .hero h1 span { display: block; }
-  .hero-sub { max-width: 34ch; font-size: clamp(17px, 1.6vw, 19px); line-height: 1.5; color: var(--ink-2); }
+  .hero-sub { max-width: 40ch; font-size: clamp(17px, 1.6vw, 19px); line-height: 1.5; color: var(--ink-2); }
   .hero-ctas { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 38px; }
 
   .hero-visual { position: relative; }
@@ -239,8 +253,8 @@
   }
   .icon-badge .icon { width: 18px; height: 18px; }
   .skill-row-text { flex: 1; min-width: 0; }
-  .skill-row-title { font-size: 14.5px; font-weight: 500; line-height: 1.3; }
-  .skill-row-desc { margin-top: 2px; font-size: 13px; line-height: 1.4; color: var(--muted); }
+  .skill-row-title { display: block; font-size: 14.5px; font-weight: 500; line-height: 1.3; }
+  .skill-row-desc { display: block; margin-top: 2px; font-size: 13px; line-height: 1.4; color: var(--muted); }
   .skill-row .arrow { width: 16px; height: 16px; color: var(--muted-2); transition: transform .35s var(--ease), color .25s; }
   .skill-row:hover .arrow { transform: translateX(3px); color: var(--ink); }
   .skill-row:hover .icon-badge { transform: scale(1.06); }
@@ -255,6 +269,66 @@
 
   /* ---------- Secciones ---------- */
   .section { padding-block: var(--section); }
+
+  /* Servicios y precios */
+  .plans-grid {
+    display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: clamp(16px, 2vw, 24px);
+    margin-top: clamp(40px, 5vw, 64px);
+  }
+  /* subgrid alinea precio, lista y botón entre tarjetas */
+  .plan {
+    display: grid; grid-template-rows: subgrid; grid-row: span 6; row-gap: 0;
+    padding: clamp(24px, 2.6vw, 34px);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 24px;
+  }
+  .plan-icon {
+    display: grid; place-items: center;
+    width: 50px; height: 50px; border-radius: 14px;
+    background: var(--lime); color: var(--ink);
+  }
+  .plan-icon .icon { width: 22px; height: 22px; }
+  .plan-title { margin-top: 22px; font-family: var(--font-display); font-size: 23px; font-weight: 600; letter-spacing: -.025em; line-height: 1.15; }
+  .plan-desc { margin-top: 10px; font-size: 14.5px; line-height: 1.55; color: var(--muted); }
+  .plan-price { margin-top: 24px; padding-top: 22px; border-top: 1px solid var(--line); }
+  .plan .price { font-size: 34px; }
+  .price-unit { margin-left: 2px; font-family: var(--font); font-size: 14px; font-weight: 400; letter-spacing: 0; color: var(--muted); }
+  .plan .checklist { align-content: start; margin-top: 22px; }
+  .plan .checklist li { align-items: flex-start; font-size: 14.5px; line-height: 1.45; }
+  .plan-cta { align-self: end; width: 100%; margin-top: 30px; }
+  .plan-featured { background: var(--ink); border-color: var(--ink); color: #fff; }
+  .plan-featured .plan-desc,
+  .plan-featured .price-label,
+  .plan-featured .price-unit { color: rgba(255, 255, 255, .62); }
+  .plan-featured .plan-price { border-top-color: rgba(255, 255, 255, .14); }
+  .plan-featured .ph { background: rgba(212, 242, 106, .22); }
+  .plans-note { margin-top: 28px; font-size: 14.5px; color: var(--muted); }
+  .plans-note a {
+    color: var(--ink); font-weight: 500;
+    text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px;
+    text-decoration-color: var(--line-strong); transition: text-decoration-color .25s;
+  }
+  .plans-note a:hover { text-decoration-color: var(--ink); }
+
+  /* Proceso */
+  .steps {
+    display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: clamp(24px, 3vw, 40px);
+    margin: clamp(40px, 5vw, 64px) 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  .step { padding-top: 24px; border-top: 1px solid var(--line-strong); }
+  .step-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    height: 26px; padding: 0 11px; border-radius: 999px;
+    background: var(--lime);
+    font-size: 12px; font-weight: 600; letter-spacing: .04em;
+  }
+  .step h3 { margin-top: 18px; font-size: 17px; font-weight: 500; letter-spacing: -.015em; }
+  .step p { margin-top: 8px; font-size: 14px; line-height: 1.6; color: var(--muted); }
 
   /* Claude Skills */
   .skills-grid {
@@ -285,7 +359,7 @@
   .check {
     display: grid; place-items: center; flex: none;
     width: 20px; height: 20px; border-radius: 50%;
-    background: var(--lime);
+    background: var(--lime); color: var(--ink);
   }
   .check .icon { width: 12px; height: 12px; stroke-width: 2.6; }
   .product-foot {
@@ -297,32 +371,15 @@
   .price-label { font-size: 11px; font-weight: 500; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); }
   .price { margin-top: 6px; font-family: var(--font-display); font-size: 38px; font-weight: 600; letter-spacing: -.035em; line-height: 1; }
 
-  /* Publicidad */
-  .ads-grid {
-    display: grid;
-    grid-template-columns: minmax(0, 1.35fr) repeat(3, minmax(0, 1fr));
-    gap: clamp(32px, 4vw, 56px);
-    align-items: start;
-  }
-  .ads-intro .lead { max-width: 40ch; }
-  .service-icon {
-    display: grid; place-items: center;
-    width: 46px; height: 46px; border-radius: 13px;
-    border: 1px solid var(--line-strong);
-    transition: background-color .3s, border-color .3s;
-  }
-  .service:hover .service-icon { background: var(--lime); border-color: var(--lime); }
-  .service h3 { margin-top: 22px; font-size: 16px; font-weight: 500; letter-spacing: -.01em; }
-  .service p { margin-top: 8px; font-size: 14px; line-height: 1.6; color: var(--muted); }
-
   /* Casos */
   .cases-grid {
     display: grid;
-    grid-template-columns: minmax(0, .9fr) minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: clamp(20px, 2.4vw, 28px);
     align-items: start;
+    margin-top: clamp(40px, 5vw, 64px);
   }
-  .cases-intro { padding-right: clamp(0px, 2vw, 28px); }
+  .cases-extra { margin-top: 28px; }
   .case {
     padding: 10px;
     background: var(--surface);
@@ -371,7 +428,42 @@
     background: rgba(212, 242, 106, .08);
     box-shadow: 0 0 22px rgba(212, 242, 106, .45), inset 0 0 14px rgba(212, 242, 106, .2);
   }
-  .cases-extra { margin-top: 28px; }
+  /* Miniatura de esta web dentro de un navegador */
+  .browser {
+    position: relative; overflow: hidden;
+    width: 76%; aspect-ratio: 16 / 10;
+    background: var(--bg);
+    border-radius: 8px;
+    box-shadow: 0 24px 48px -20px rgba(0, 0, 0, .7);
+  }
+  .browser-bar { display: flex; align-items: center; gap: 4px; height: 14px; padding: 0 8px; background: #E7E7E2; }
+  .browser-bar span { width: 5px; height: 5px; border-radius: 50%; background: #C9C9C2; }
+  .browser-body { position: relative; height: calc(100% - 14px); padding: 9% 8%; }
+  .mini-eyebrow { display: block; width: 26%; height: 3px; margin-bottom: 9%; border-radius: 2px; background: var(--lime); }
+  .mini-title {
+    font-family: var(--font-display); font-weight: 600;
+    font-size: clamp(12px, 1.25vw, 16px); line-height: 1; letter-spacing: -.045em;
+    color: var(--ink);
+  }
+  .mini-ctas { display: flex; gap: 5px; margin-top: 9%; }
+  .mini-btn { width: 34px; height: 9px; border: 1px solid var(--ink); border-radius: 99px; }
+  .mini-btn-dark { background: var(--ink); }
+  .mini-card {
+    position: absolute; right: 7%; top: 18%;
+    width: 33%; height: 62%;
+    background: #fff; border: 1px solid var(--line); border-radius: 5px;
+  }
+  .mini-card::before {
+    content: ""; position: absolute; left: 14%; top: 16%;
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--lime);
+    box-shadow: 0 13px 0 var(--lime), 0 26px 0 var(--lime), 0 39px 0 var(--lime);
+  }
+  .mini-card::after {
+    content: ""; position: absolute; left: 32%; right: 12%; top: 17%; height: 45px;
+    background: repeating-linear-gradient(to bottom, var(--line) 0 4px, transparent 4px 13px);
+  }
+
   .case-body { padding: 18px 10px 10px; }
   .case-client { font-size: 12px; color: var(--muted); }
   .case-title { margin-top: 6px; font-size: 17px; font-weight: 500; letter-spacing: -.015em; line-height: 1.3; }
@@ -388,8 +480,8 @@
   /* Sobre mí */
   .about-grid {
     display: grid;
-    grid-template-columns: minmax(0, 250px) minmax(0, 1.5fr) minmax(0, 1fr);
-    gap: clamp(32px, 5vw, 72px);
+    grid-template-columns: minmax(0, 280px) minmax(0, 1fr);
+    gap: clamp(32px, 6vw, 96px);
     align-items: center;
   }
   .about-photo {
@@ -405,24 +497,46 @@
   }
   .photo-ph { position: relative; display: grid; justify-items: center; gap: 10px; padding: 16px; text-align: center; font-size: 12px; color: var(--muted); }
   .photo-ph .icon { width: 22px; height: 22px; color: var(--muted-2); }
-  .about-text .lead { max-width: 52ch; }
-  .about-text .btn { margin-top: 30px; }
-  .contact { padding-left: clamp(0px, 3vw, 40px); border-left: 1px solid var(--line); }
+  .about-text .lead { max-width: 58ch; }
+  .creds { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 28px; }
+  .creds li {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 7px 14px 7px 10px;
+    font-size: 13px; color: var(--ink-2);
+    background: var(--surface); border: 1px solid var(--line); border-radius: 999px;
+  }
+  .creds .icon { width: 16px; height: 16px; }
+
+  /* Contacto */
+  .cta { padding-bottom: var(--section); }
+  .cta-box {
+    position: relative; overflow: hidden;
+    display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+    gap: clamp(36px, 5vw, 80px); align-items: center;
+    padding: clamp(32px, 5.5vw, 72px);
+    background: var(--ink); color: #fff;
+    border-radius: 28px;
+  }
+  .cta-box::before {
+    content: ""; position: absolute; right: -12%; top: -40%; width: 62%; height: 140%;
+    background: radial-gradient(closest-side, rgba(212, 242, 106, .16), transparent);
+    pointer-events: none;
+  }
+  .cta-box > * { position: relative; }
+  .cta-box .eyebrow { color: rgba(255, 255, 255, .6); }
+  .cta-box .lead { color: rgba(255, 255, 255, .66); max-width: 50ch; }
+  .cta-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 34px; }
   .contact-list { display: grid; gap: 24px; }
   .contact-item { display: flex; align-items: flex-start; gap: 14px; }
-  .contact-icon {
-    display: grid; place-items: center; flex: none;
-    width: 38px; height: 38px; border-radius: 50%;
-    border: 1px solid var(--line-strong);
-  }
-  .contact-icon .icon { width: 16px; height: 16px; }
+  .cta-box .round-icon { border-color: rgba(255, 255, 255, .18); color: var(--lime); }
   .contact-title { font-size: 15px; font-weight: 500; overflow-wrap: anywhere; }
   a.contact-title {
     text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px;
-    text-decoration-color: var(--line-strong); transition: text-decoration-color .25s;
+    text-decoration-color: rgba(255, 255, 255, .3); transition: text-decoration-color .25s;
   }
-  a.contact-title:hover { text-decoration-color: var(--ink); }
-  .contact-desc { margin-top: 2px; font-size: 13px; color: var(--muted); }
+  a.contact-title:hover { text-decoration-color: #fff; }
+  .contact-desc { margin-top: 2px; font-size: 13px; color: rgba(255, 255, 255, .55); }
+  .cta-box .ph { background: rgba(212, 242, 106, .22); }
 
   /* ---------- Footer ---------- */
   .footer-inner {
@@ -453,15 +567,12 @@
     .values-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .value { padding: 24px 0; }
     .values-grid .value:nth-child(n+3) { border-top: 1px solid var(--line); }
+    .plans-grid { grid-template-columns: 1fr; max-width: 620px; }
+    .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .skills-grid { grid-template-columns: 1fr; }
     .product { max-width: 620px; }
-    .ads-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-    .ads-intro { grid-column: 1 / -1; margin-bottom: 8px; }
-    .cases-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .cases-intro { grid-column: 1 / -1; padding-right: 0; margin-bottom: 12px; }
-    .about-grid { grid-template-columns: minmax(0, 220px) minmax(0, 1fr); align-items: start; }
-    .contact { grid-column: 1 / -1; padding: 32px 0 0; border-left: 0; border-top: 1px solid var(--line); }
-    .contact-list { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .about-grid { grid-template-columns: minmax(0, 220px) minmax(0, 1fr); }
+    .cta-box { grid-template-columns: 1fr; }
   }
 
   @media (max-width: 860px) {
@@ -482,6 +593,7 @@
     .site-header.nav-open { background: var(--bg); border-bottom-color: var(--line); }
     .nav-toggle { display: grid; }
     html { scroll-padding-top: 80px; }
+    .cases-grid { grid-template-columns: 1fr; max-width: 560px; }
   }
 
   @media (max-width: 639px) {
@@ -489,15 +601,14 @@
     .values-grid { grid-template-columns: 1fr; }
     .values-grid .value { padding: 20px 0; }
     .values-grid .value + .value { border-top: 1px solid var(--line); }
+    .steps { grid-template-columns: 1fr; }
     .product { grid-template-columns: 1fr; }
     .product-icon { margin-bottom: 20px; }
     .product-foot .btn { width: 100%; }
-    .ads-grid { grid-template-columns: 1fr; gap: 36px; }
-    .ads-intro { margin-bottom: 0; }
-    .cases-grid { grid-template-columns: 1fr; }
     .about-grid { grid-template-columns: 1fr; }
     .about-photo { max-width: 240px; }
-    .contact-list { grid-template-columns: 1fr; }
+    .cta-box { border-radius: 22px; }
+    .cta-actions .btn { flex: 1 1 auto; }
     .footer-inner { grid-template-columns: 1fr; justify-items: start; gap: 16px; }
     .footer-tagline { justify-self: start; }
   }
@@ -524,19 +635,17 @@
 <!-- Iconos SVG (estilo Lucide) -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
   <symbol id="i-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></symbol>
-  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
-  <symbol id="i-chart" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></symbol>
-  <symbol id="i-pen" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></symbol>
-  <symbol id="i-zap" viewBox="0 0 24 24"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></symbol>
+  <symbol id="i-monitor" viewBox="0 0 24 24"><rect width="20" height="14" x="2" y="3" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></symbol>
+  <symbol id="i-clapper" viewBox="0 0 24 24"><path d="M20.2 6 3 11l-.9-2.4c-.3-1.1.3-2.2 1.3-2.5l13.5-4c1.1-.3 2.2.3 2.5 1.3Z"/><path d="m6.2 5.3 3.1 3.9"/><path d="m12.4 3.4 3.1 4"/><path d="M3 11h18v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></symbol>
   <symbol id="i-sparkles" viewBox="0 0 24 24"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/><path d="M5 3v4"/><path d="M3 5h4"/></symbol>
-  <symbol id="i-bulb" viewBox="0 0 24 24"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></symbol>
-  <symbol id="i-trending" viewBox="0 0 24 24"><path d="M22 7 13.5 15.5 8.5 10.5 2 17"/><path d="M16 7h6v6"/></symbol>
-  <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M21 4h-7"/><path d="M10 4H3"/><path d="M21 12h-9"/><path d="M8 12H3"/><path d="M21 20h-5"/><path d="M12 20H3"/><path d="M14 2v4"/><path d="M8 10v4"/><path d="M16 18v4"/></symbol>
+  <symbol id="i-palette" viewBox="0 0 24 24"><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.93 0 1.65-.75 1.65-1.69 0-.44-.18-.84-.44-1.13-.29-.29-.44-.65-.44-1.13a1.64 1.64 0 0 1 1.67-1.67h2c3.05 0 5.55-2.5 5.55-5.55C21.97 6.01 17.46 2 12 2z"/></symbol>
+  <symbol id="i-cloud" viewBox="0 0 24 24"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></symbol>
+  <symbol id="i-message" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></symbol>
   <symbol id="i-layers" viewBox="0 0 24 24"><path d="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/></symbol>
   <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
-  <symbol id="i-image" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/></symbol>
-  <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></symbol>
-  <symbol id="i-video" viewBox="0 0 24 24"><path d="m16 13 5.2 3.5a.5.5 0 0 0 .8-.4V7.9a.5.5 0 0 0-.8-.4L16 10.5"/><rect x="2" y="6" width="14" height="12" rx="2"/></symbol>
+  <symbol id="i-award" viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.48 12.89 17 22l-5-3-5 3 1.52-9.11"/></symbol>
+  <symbol id="i-cap" viewBox="0 0 24 24"><path d="M21.42 10.92a1 1 0 0 0-.02-1.84L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.83l8.57 3.91a2 2 0 0 0 1.66 0z"/><path d="M22 10v6"/><path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"/></symbol>
   <symbol id="i-pin" viewBox="0 0 24 24"><path d="M20 10c0 5-5.5 10.2-7.4 11.8a1 1 0 0 1-1.2 0C9.5 20.2 4 15 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></symbol>
   <symbol id="i-mail" viewBox="0 0 24 24"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></symbol>
   <symbol id="i-instagram" viewBox="0 0 24 24"><rect width="20" height="20" x="2" y="2" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><path d="M17.5 6.5h.01"/></symbol>
@@ -547,13 +656,13 @@
 
 <a class="skip" href="#main">Saltar al contenido</a>
 
-<!-- 1. HEADER -->
+<!-- HEADER -->
 <header class="site-header">
   <div class="container header-inner">
     <a class="brand" href="#top">Miquel Serrano</a>
     <nav class="nav" id="site-nav" aria-label="Principal">
       <a href="#servicios">Servicios</a>
-      <a href="#skills">Claude Skills</a>
+      <a href="#proceso">Cómo trabajo</a>
       <a href="#casos">Casos</a>
       <a href="#sobre-mi">Sobre mí</a>
     </nav>
@@ -569,54 +678,54 @@
 
 <main id="main">
 
-  <!-- 2. HERO -->
+  <!-- HERO -->
   <section class="hero" id="top">
     <div class="container hero-grid">
       <div class="hero-copy">
-        <p class="eyebrow reveal"><span class="dot"></span>IA + Publicidad + Creatividad</p>
-        <h1 class="reveal" style="--d:80ms"><span>IA útil.</span> <span>Creatividad.</span> <span>Resultados.</span></h1>
-        <p class="hero-sub reveal" style="--d:160ms">Skills para Claude y campañas creativas para marcas que quieren crecer.</p>
+        <p class="eyebrow reveal"><span class="dot"></span>Web + Mantenimiento + Vídeos IA</p>
+        <h1 class="reveal" style="--d:80ms"><span>Webs que venden.</span> <span>Vídeos con IA.</span> <span>Sin líos.</span></h1>
+        <p class="hero-sub reveal" style="--d:160ms">Diseño la página web de tu negocio, me encargo del dominio y del mantenimiento, y creo vídeos con IA para que tu empresa crezca en internet.</p>
         <div class="hero-ctas reveal" style="--d:240ms">
-          <a class="btn btn-dark" href="#skills">Explorar Claude Skills <svg class="icon" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
-          <a class="btn btn-outline" href="#servicios">Ver servicios</a>
+          <a class="btn btn-dark" href="#servicios">Ver servicios <svg class="icon" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
+          <a class="btn btn-outline" href="#contacto">Pedir presupuesto</a>
         </div>
       </div>
 
       <div class="hero-visual reveal" style="--d:200ms">
         <div class="skill-card float">
           <div class="skill-card-head">
-            <p class="skill-card-title">Claude Skills</p>
-            <span class="skill-card-meta"><span class="dot"></span>4 skills</span>
+            <p class="skill-card-title">Lo que hago</p>
+            <span class="skill-card-meta"><span class="dot"></span>Terrassa · remoto</span>
           </div>
-          <a class="skill-row" href="#skills">
-            <span class="icon-badge"><svg class="icon" aria-hidden="true"><use href="#i-search"/></svg></span>
+          <a class="skill-row" href="#servicios">
+            <span class="icon-badge"><svg class="icon" aria-hidden="true"><use href="#i-monitor"/></svg></span>
             <span class="skill-row-text">
-              <span class="skill-row-title" style="display:block">Investigación avanzada</span>
-              <span class="skill-row-desc" style="display:block">Analiza, resume y encuentra insights.</span>
+              <span class="skill-row-title">Páginas web</span>
+              <span class="skill-row-desc">Diseño a medida, rápidas y adaptadas a móvil.</span>
+            </span>
+            <svg class="icon arrow" aria-hidden="true"><use href="#i-arrow-right"/></svg>
+          </a>
+          <a class="skill-row" href="#servicios">
+            <span class="icon-badge"><svg class="icon" aria-hidden="true"><use href="#i-shield"/></svg></span>
+            <span class="skill-row-text">
+              <span class="skill-row-title">Dominio y mantenimiento</span>
+              <span class="skill-row-desc">Hosting, seguridad, copias y cambios.</span>
+            </span>
+            <svg class="icon arrow" aria-hidden="true"><use href="#i-arrow-right"/></svg>
+          </a>
+          <a class="skill-row" href="#servicios">
+            <span class="icon-badge"><svg class="icon" aria-hidden="true"><use href="#i-clapper"/></svg></span>
+            <span class="skill-row-text">
+              <span class="skill-row-title">Vídeos con IA</span>
+              <span class="skill-row-desc">Anuncios, reels y vídeos para tu marca.</span>
             </span>
             <svg class="icon arrow" aria-hidden="true"><use href="#i-arrow-right"/></svg>
           </a>
           <a class="skill-row" href="#skills">
-            <span class="icon-badge"><svg class="icon" aria-hidden="true"><use href="#i-chart"/></svg></span>
+            <span class="icon-badge"><svg class="icon" aria-hidden="true"><use href="#i-sparkles"/></svg></span>
             <span class="skill-row-text">
-              <span class="skill-row-title" style="display:block">Análisis de datos</span>
-              <span class="skill-row-desc" style="display:block">Convierte datos en decisiones.</span>
-            </span>
-            <svg class="icon arrow" aria-hidden="true"><use href="#i-arrow-right"/></svg>
-          </a>
-          <a class="skill-row" href="#skills">
-            <span class="icon-badge"><svg class="icon" aria-hidden="true"><use href="#i-pen"/></svg></span>
-            <span class="skill-row-text">
-              <span class="skill-row-title" style="display:block">Generación de contenido</span>
-              <span class="skill-row-desc" style="display:block">Ideas, textos y estructuras creativas.</span>
-            </span>
-            <svg class="icon arrow" aria-hidden="true"><use href="#i-arrow-right"/></svg>
-          </a>
-          <a class="skill-row" href="#skills">
-            <span class="icon-badge"><svg class="icon" aria-hidden="true"><use href="#i-zap"/></svg></span>
-            <span class="skill-row-text">
-              <span class="skill-row-title" style="display:block">Automatización de tareas</span>
-              <span class="skill-row-desc" style="display:block">Ahorra tiempo, trabaja mejor.</span>
+              <span class="skill-row-title">Claude Skills</span>
+              <span class="skill-row-desc">Automatiza tu trabajo con IA.</span>
             </span>
             <svg class="icon arrow" aria-hidden="true"><use href="#i-arrow-right"/></svg>
           </a>
@@ -625,29 +734,210 @@
     </div>
   </section>
 
-  <!-- 3. VALORES -->
+  <!-- VALORES -->
   <section class="values" aria-label="Por qué trabajar conmigo">
     <div class="container values-grid">
       <div class="value reveal">
-        <svg class="icon" aria-hidden="true"><use href="#i-sparkles"/></svg>
-        <div><p class="value-title">IA aplicada</p><p class="value-desc">Skills prácticas, sin complicaciones.</p></div>
+        <svg class="icon" aria-hidden="true"><use href="#i-palette"/></svg>
+        <div><p class="value-title">Diseño a medida</p><p class="value-desc">Webs pensadas para tu negocio.</p></div>
       </div>
       <div class="value reveal" style="--d:80ms">
-        <svg class="icon" aria-hidden="true"><use href="#i-bulb"/></svg>
-        <div><p class="value-title">Creatividad estratégica</p><p class="value-desc">Ideas que conectan y convierten.</p></div>
+        <svg class="icon" aria-hidden="true"><use href="#i-cloud"/></svg>
+        <div><p class="value-title">Base técnica sólida</p><p class="value-desc">Técnico de sistemas certificado en Azure.</p></div>
       </div>
       <div class="value reveal" style="--d:160ms">
-        <svg class="icon" aria-hidden="true"><use href="#i-trending"/></svg>
-        <div><p class="value-title">Enfoque en resultados</p><p class="value-desc">Más visibilidad, más oportunidades.</p></div>
+        <svg class="icon" aria-hidden="true"><use href="#i-sparkles"/></svg>
+        <div><p class="value-title">IA aplicada</p><p class="value-desc">Más contenido, en menos tiempo.</p></div>
       </div>
       <div class="value reveal" style="--d:240ms">
-        <svg class="icon" aria-hidden="true"><use href="#i-sliders"/></svg>
-        <div><p class="value-title">Trabajo personalizado</p><p class="value-desc">Soluciones a medida para cada proyecto.</p></div>
+        <svg class="icon" aria-hidden="true"><use href="#i-message"/></svg>
+        <div><p class="value-title">Trato directo</p><p class="value-desc">Hablas conmigo, sin intermediarios.</p></div>
       </div>
     </div>
   </section>
 
-  <!-- 4. CLAUDE SKILLS -->
+  <!-- SERVICIOS -->
+  <section class="section" id="servicios">
+    <div class="container">
+      <div class="section-head">
+        <p class="eyebrow reveal">Servicios</p>
+        <h2 class="h2 reveal" style="--d:80ms">Todo lo que tu empresa necesita para crecer en internet.</h2>
+        <p class="lead reveal" style="--d:160ms">Elige un servicio o combínalos. Precios claros y trato directo, sin intermediarios.</p>
+      </div>
+
+      <div class="plans-grid">
+        <article class="plan reveal" style="--d:80ms">
+          <span class="plan-icon"><svg class="icon" aria-hidden="true"><use href="#i-monitor"/></svg></span>
+          <h3 class="plan-title">Página web</h3>
+          <p class="plan-desc">Una web rápida y profesional, pensada para que tus clientes te encuentren y te contacten.</p>
+          <div class="plan-price">
+            <p class="price-label">Desde</p>
+            <p class="price">89 €</p>
+          </div>
+          <ul class="checklist">
+            <li><span class="check"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg></span>Diseño a medida y adaptado a móvil</li>
+            <li><span class="check"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg></span>Textos y estructura pensados para vender</li>
+            <li><span class="check"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg></span>SEO básico y carga rápida</li>
+            <li><span class="check"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg></span>Formulario de contacto o WhatsApp</li>
+            <li><span class="check"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg></span>Publicada con tu propio dominio</li>
+            <li><span class="check"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg></span>Lista en 1 semana aprox., según el proyecto</li>
+          </ul>
+          <a class="btn btn-outline plan-cta" href="#contacto">Pedir presupuesto <svg class="icon" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
+        </article>
+
+        <article class="plan plan-featured reveal" style="--d:160ms">
+          <span class="plan-icon"><svg class="icon" aria-hidden="true"><use href="#i-shield"/></svg></span>
+          <h3 class="plan-title">Dominio y mantenimiento</h3>
+          <p class="plan-desc">Me encargo de todo lo técnico para que tu web esté siempre online, segura y al día.</p>
+          <div class="plan-price">
+            <p class="price-label">Cuota</p>
+            <p class="price">14 €<span class="price-unit">/mes</span></p>
+          </div>
+          <ul class="checklist">
+            <li><span class="check"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg></span>Registro y renovación del dominio</li>
+            <li><span class="check"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg></span>Hosting y certificado SSL</li>
+            <li><span class="check"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg></span>Copias de seguridad y actualizaciones</li>
+            <li><span class="check"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg></span>Pequeños cambios de contenido cada mes</li>
+            <li><span class="check"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg></span>Soporte directo conmigo</li>
+          </ul>
+          <a class="btn btn-light plan-cta" href="#contacto">Pedir información <svg class="icon" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
+        </article>
+
+        <article class="plan reveal" style="--d:240ms">
+          <span class="plan-icon"><svg class="icon" aria-hidden="true"><use href="#i-clapper"/></svg></span>
+          <h3 class="plan-title">Vídeos con IA para empresas</h3>
+          <p class="plan-desc">Vídeos para tus redes y tu web creados con IA: más contenido y en menos tiempo.</p>
+          <div class="plan-price">
+            <p class="price-label">Desde</p>
+            <p class="price">40 €<span class="price-unit">/vídeo</span></p>
+          </div>
+          <ul class="checklist">
+            <li><span class="check"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg></span>Anuncios para Meta, TikTok y YouTube</li>
+            <li><span class="check"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg></span>Reels y contenido mensual para redes</li>
+            <li><span class="check"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg></span>Vídeos explicativos de producto o servicio</li>
+            <li><span class="check"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg></span>Guion, voz y edición incluidos</li>
+            <li><span class="check"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg></span>Formato vertical y horizontal</li>
+          </ul>
+          <a class="btn btn-outline plan-cta" href="#contacto">Pedir presupuesto <svg class="icon" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
+        </article>
+      </div>
+
+      <p class="plans-note reveal">¿Necesitas web, mantenimiento y vídeos? <a href="#contacto">Te preparo un pack a medida.</a></p>
+    </div>
+  </section>
+
+  <div class="container"><hr class="rule"></div>
+
+  <!-- CÓMO TRABAJO -->
+  <section class="section" id="proceso">
+    <div class="container">
+      <div class="section-head">
+        <p class="eyebrow reveal">Cómo trabajo</p>
+        <h2 class="h2 reveal" style="--d:80ms">De la idea al resultado, en 4 pasos.</h2>
+      </div>
+      <ol class="steps">
+        <li class="step reveal" style="--d:80ms">
+          <span class="step-num">01</span>
+          <h3>Hablamos</h3>
+          <p>Una llamada corta para entender tu negocio, tus objetivos y lo que necesitas.</p>
+        </li>
+        <li class="step reveal" style="--d:160ms">
+          <span class="step-num">02</span>
+          <h3>Propuesta</h3>
+          <p>Te envío una propuesta clara, con precio y plazos.</p>
+        </li>
+        <li class="step reveal" style="--d:240ms">
+          <span class="step-num">03</span>
+          <h3>Diseño y creación</h3>
+          <p>Creo tu web o tus vídeos y los revisamos juntos antes de publicar. Una web suele estar lista en una semana.</p>
+        </li>
+        <li class="step reveal" style="--d:320ms">
+          <span class="step-num">04</span>
+          <h3>Publicación y cuidado</h3>
+          <p>Lo publico con tu dominio y me encargo del mantenimiento para que no tengas que preocuparte.</p>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <div class="container"><hr class="rule"></div>
+
+  <!-- CASOS REALES -->
+  <section class="section" id="casos">
+    <div class="container">
+      <div class="section-head">
+        <p class="eyebrow reveal">Casos reales</p>
+        <h2 class="h2 reveal" style="--d:80ms">Trabajo y resultados</h2>
+        <p class="lead reveal" style="--d:160ms">Esta misma web es un ejemplo de lo que puedo hacer por tu negocio. Los vídeos con IA son de mi propio canal de reels de curiosidades, psicología y ciencia, con datos reales de Instagram de los últimos 30 días.</p>
+        <div class="cases-extra reveal" style="--d:240ms">
+          <a class="text-link" href="https://www.instagram.com/datoscuriososmk/" target="_blank" rel="noopener">Ver el canal en Instagram <svg class="icon" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
+        </div>
+      </div>
+
+      <div class="cases-grid">
+      <article class="case reveal" style="--d:80ms">
+        <div class="case-media">
+          <div class="browser" aria-hidden="true">
+            <div class="browser-bar"><span></span><span></span><span></span></div>
+            <div class="browser-body">
+              <span class="mini-eyebrow"></span>
+              <p class="mini-title">Webs que venden.<br>Vídeos con IA.<br>Sin líos.</p>
+              <div class="mini-ctas"><span class="mini-btn mini-btn-dark"></span><span class="mini-btn"></span></div>
+              <span class="mini-card"></span>
+            </div>
+          </div>
+        </div>
+        <div class="case-body">
+          <p class="case-client">Proyecto propio · Página web</p>
+          <h3 class="case-title">Esta misma web</h3>
+          <div class="tags"><span class="tag">Diseño</span><span class="tag">Desarrollo</span><span class="tag">Responsive</span></div>
+          <div class="metrics">
+            <div><p class="metric-value">1 semana</p><p class="metric-label">Plazo habitual de entrega</p></div>
+            <div><p class="metric-value">100 %</p><p class="metric-label">Adaptada a móvil</p></div>
+          </div>
+        </div>
+      </article>
+
+      <!-- Datos: Instagram Insights, últimos 30 días (octubre 2026) -->
+      <article class="case reveal" style="--d:120ms">
+        <div class="case-media">
+          <div class="case-stat">
+            <p class="case-stat-value">9.075</p>
+            <p class="case-stat-label">Reproducciones</p>
+          </div>
+        </div>
+        <div class="case-body">
+          <p class="case-client">@datoscuriososmk · Últimos 30 días</p>
+          <h3 class="case-title">Contenido orgánico en Instagram</h3>
+          <div class="tags"><span class="tag">Reels</span><span class="tag">Guion con IA</span><span class="tag">Edición</span></div>
+          <div class="metrics">
+            <div><p class="metric-value">7.199</p><p class="metric-label">Espectadores</p></div>
+            <div><p class="metric-value">99,7 %</p><p class="metric-label">Alcance a no seguidores</p></div>
+          </div>
+        </div>
+      </article>
+
+      <article class="case reveal" style="--d:220ms">
+        <div class="case-media">
+          <div class="doors" aria-hidden="true"><span class="door"></span><span class="door"></span><span class="door"></span></div>
+        </div>
+        <div class="case-body">
+          <p class="case-client">@datoscuriososmk · Serie de reels</p>
+          <h3 class="case-title">Reels de psicología y ciencia</h3>
+          <div class="tags"><span class="tag">Concepto</span><span class="tag">Estilo visual</span><span class="tag">IA</span></div>
+          <div class="metrics">
+            <div><p class="metric-value">2.666</p><p class="metric-label">Reproducciones del reel top</p></div>
+            <div><p class="metric-value">392</p><p class="metric-label">Interacciones</p></div>
+          </div>
+        </div>
+      </article>
+      </div>
+    </div>
+  </section>
+
+  <div class="container"><hr class="rule"></div>
+
+  <!-- CLAUDE SKILLS -->
   <section class="section" id="skills">
     <div class="container skills-grid">
       <div>
@@ -685,115 +975,54 @@
 
   <div class="container"><hr class="rule"></div>
 
-  <!-- 5. PUBLICIDAD Y CREATIVIDAD -->
-  <section class="section" id="servicios">
-    <div class="container ads-grid">
-      <div class="ads-intro">
-        <p class="eyebrow reveal">Servicios de anuncios</p>
-        <h2 class="h2 reveal" style="--d:80ms">Publicidad y creatividad</h2>
-        <p class="lead reveal" style="--d:160ms">Estrategia, diseño y gestión de campañas para que tu marca destaque donde importa.</p>
-      </div>
-      <div class="service reveal" style="--d:120ms">
-        <div class="service-icon"><svg class="icon" aria-hidden="true"><use href="#i-image"/></svg></div>
-        <h3>Creatividades para anuncios</h3>
-        <p>Diseños que captan la atención y generan clics.</p>
-      </div>
-      <div class="service reveal" style="--d:200ms">
-        <div class="service-icon"><svg class="icon" aria-hidden="true"><use href="#i-target"/></svg></div>
-        <h3>Concepto y estrategia</h3>
-        <p>Mensajes, públicos y canales para un mayor impacto.</p>
-      </div>
-      <div class="service reveal" style="--d:280ms">
-        <div class="service-icon"><svg class="icon" aria-hidden="true"><use href="#i-video"/></svg></div>
-        <h3>Contenido para campañas</h3>
-        <p>Vídeos, reels y piezas adaptadas a cada plataforma.</p>
-      </div>
-    </div>
-  </section>
-
-  <div class="container"><hr class="rule"></div>
-
-  <!-- 6. CASOS REALES -->
-  <section class="section" id="casos">
-    <div class="container cases-grid">
-      <div class="cases-intro">
-        <p class="eyebrow reveal">Casos reales</p>
-        <h2 class="h2 reveal" style="--d:80ms">Trabajo y resultados</h2>
-        <p class="lead reveal" style="--d:160ms">Mi propio canal de reels de curiosidades, psicología y ciencia, creado con mis skills para Claude. Datos reales de Instagram de los últimos 30 días.</p>
-        <div class="cases-extra reveal" style="--d:240ms">
-          <a class="text-link" href="https://www.instagram.com/datoscuriososmk/" target="_blank" rel="noopener">Ver el canal en Instagram <svg class="icon" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
-        </div>
-      </div>
-
-      <!-- Datos: Instagram Insights, últimos 30 días (octubre 2026) -->
-      <article class="case reveal" style="--d:120ms">
-        <div class="case-media">
-          <div class="case-stat">
-            <p class="case-stat-value">9.075</p>
-            <p class="case-stat-label">Reproducciones</p>
-          </div>
-        </div>
-        <div class="case-body">
-          <p class="case-client">@datoscuriososmk · Últimos 30 días</p>
-          <h3 class="case-title">Contenido orgánico en Instagram</h3>
-          <div class="tags"><span class="tag">Reels</span><span class="tag">Guion con IA</span><span class="tag">Edición</span></div>
-          <div class="metrics">
-            <div><p class="metric-value">7.199</p><p class="metric-label">Espectadores</p></div>
-            <div><p class="metric-value">99,7 %</p><p class="metric-label">Alcance a no seguidores</p></div>
-          </div>
-        </div>
-      </article>
-
-      <article class="case reveal" style="--d:220ms">
-        <div class="case-media">
-          <div class="doors" aria-hidden="true"><span class="door"></span><span class="door"></span><span class="door"></span></div>
-        </div>
-        <div class="case-body">
-          <p class="case-client">@datoscuriososmk · Serie de reels</p>
-          <h3 class="case-title">Reels de psicología y ciencia</h3>
-          <div class="tags"><span class="tag">Concepto</span><span class="tag">Estilo visual</span><span class="tag">IA</span></div>
-          <div class="metrics">
-            <div><p class="metric-value">2.666</p><p class="metric-label">Reproducciones del reel top</p></div>
-            <div><p class="metric-value">392</p><p class="metric-label">Interacciones</p></div>
-          </div>
-        </div>
-      </article>
-    </div>
-  </section>
-
-  <div class="container"><hr class="rule"></div>
-
-  <!-- 7. SOBRE MÍ -->
+  <!-- SOBRE MÍ -->
   <section class="section" id="sobre-mi">
-    <div class="container about-grid">
-      <div class="about-photo reveal">
-        <!-- [PLACEHOLDER] Tu foto: sustituye el <span> por <img src="ruta/foto.jpg" alt="Miquel Serrano"> (se mostrará en blanco y negro) -->
-        <span class="photo-ph"><svg class="icon" aria-hidden="true"><use href="#i-user"/></svg>[PLACEHOLDER]<br>Tu foto</span>
-      </div>
+    <div class="container">
+      <div class="about-grid">
+        <div class="about-photo reveal">
+          <!-- [PLACEHOLDER] Tu foto: sustituye el <span> por <img src="ruta/foto.jpg" alt="Miquel Serrano"> (se mostrará en blanco y negro) -->
+          <span class="photo-ph"><svg class="icon" aria-hidden="true"><use href="#i-user"/></svg>[PLACEHOLDER]<br>Tu foto</span>
+        </div>
 
-      <div class="about-text">
-        <p class="eyebrow reveal">Sobre mí</p>
-        <h2 class="h2 reveal" style="--d:80ms">Tecnología, creatividad y mentalidad de crecimiento.</h2>
-        <p class="lead reveal" style="--d:160ms">Soy Miquel Serrano, especializado en IA y publicidad digital. Ayudo a marcas y negocios a optimizar su tiempo, mejorar su comunicación y conseguir mejores resultados.</p>
-        <div class="reveal" style="--d:240ms">
-          <!-- [PLACEHOLDER] Email -->
-          <a class="btn btn-sm btn-outline" href="mailto:[EMAIL]">Hablemos <svg class="icon" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
+        <div class="about-text">
+          <p class="eyebrow reveal">Sobre mí</p>
+          <h2 class="h2 reveal" style="--d:80ms">Tecnología, creatividad y mentalidad de crecimiento.</h2>
+          <p class="lead reveal" style="--d:160ms">Soy Miquel Serrano, técnico superior en Administración de Sistemas en Red y administrador de Microsoft Azure certificado. Uno esa base técnica con la IA y la creatividad para crear webs que funcionan y vídeos que se ven.</p>
+          <p class="lead reveal" style="--d:220ms">Por eso, cuando me encargas tu web, también cuido lo que no se ve: el dominio, el servidor, la seguridad y las copias.</p>
+          <ul class="creds reveal" style="--d:280ms">
+            <li><svg class="icon" aria-hidden="true"><use href="#i-cap"/></svg>CFGS Administración de Sistemas en Red</li>
+            <li><svg class="icon" aria-hidden="true"><use href="#i-award"/></svg>Microsoft Azure Administrator (AZ-104)</li>
+            <li><svg class="icon" aria-hidden="true"><use href="#i-award"/></svg>Microsoft Azure Fundamentals</li>
+          </ul>
         </div>
       </div>
+    </div>
+  </section>
 
-      <div class="contact reveal" id="contacto" style="--d:200ms">
+  <!-- CONTACTO -->
+  <section class="cta" id="contacto">
+    <div class="container">
+      <div class="cta-box reveal">
+        <div>
+          <p class="eyebrow">Contacto</p>
+          <h2 class="h2">¿Hablamos de tu proyecto?</h2>
+          <p class="lead">Cuéntame qué necesitas —web, mantenimiento o vídeos— y te respondo en menos de 24 h con una propuesta sin compromiso.</p>
+          <div class="cta-actions">
+            <a class="btn btn-light" href="mailto:miquel.arellano@gmail.com?subject=Presupuesto">Escríbeme <svg class="icon" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
+            <a class="btn btn-ghost-light" href="https://www.instagram.com/datoscuriososmk/" target="_blank" rel="noopener">Instagram</a>
+          </div>
+        </div>
         <ul class="contact-list">
           <li class="contact-item">
-            <span class="contact-icon"><svg class="icon" aria-hidden="true"><use href="#i-pin"/></svg></span>
+            <span class="round-icon"><svg class="icon" aria-hidden="true"><use href="#i-pin"/></svg></span>
             <div><p class="contact-title">Terrassa, Barcelona</p><p class="contact-desc">Trabajo en remoto y presencial.</p></div>
           </li>
           <li class="contact-item">
-            <span class="contact-icon"><svg class="icon" aria-hidden="true"><use href="#i-mail"/></svg></span>
-            <!-- [PLACEHOLDER] Email -->
-            <div><a class="contact-title" href="mailto:[EMAIL]"><span class="ph">[EMAIL]</span></a><p class="contact-desc">Te respondo en menos de 24 h.</p></div>
+            <span class="round-icon"><svg class="icon" aria-hidden="true"><use href="#i-mail"/></svg></span>
+            <div><a class="contact-title" href="mailto:miquel.arellano@gmail.com">miquel.arellano@gmail.com</a><p class="contact-desc">Te respondo en menos de 24 h.</p></div>
           </li>
           <li class="contact-item">
-            <span class="contact-icon"><svg class="icon" aria-hidden="true"><use href="#i-instagram"/></svg></span>
+            <span class="round-icon"><svg class="icon" aria-hidden="true"><use href="#i-instagram"/></svg></span>
             <div><a class="contact-title" href="https://www.instagram.com/datoscuriososmk/" target="_blank" rel="noopener">@datoscuriososmk</a><p class="contact-desc">Mi canal de reels en Instagram.</p></div>
           </li>
         </ul>
@@ -803,18 +1032,19 @@
 
 </main>
 
-<!-- 8. FOOTER -->
+<!-- FOOTER -->
 <footer>
   <div class="container">
     <div class="footer-inner">
       <a class="footer-brand" href="#top">Miquel Serrano</a>
       <nav class="footer-nav" aria-label="Pie de página">
         <a href="#servicios">Servicios</a>
-        <a href="#skills">Claude Skills</a>
         <a href="#casos">Casos</a>
+        <a href="#skills">Claude Skills</a>
         <a href="#sobre-mi">Sobre mí</a>
+        <a href="#contacto">Contacto</a>
       </nav>
-      <p class="footer-tagline">IA + Publicidad + Creatividad</p>
+      <p class="footer-tagline">Web + Vídeo + IA</p>
     </div>
   </div>
 </footer>
