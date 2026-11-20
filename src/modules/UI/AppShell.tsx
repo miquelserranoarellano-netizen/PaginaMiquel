@@ -10,6 +10,8 @@ import { useShortcuts } from './useShortcuts';
 import { ErrorBoundary } from './ErrorBoundary';
 import { useCompact } from './useLayout';
 import { MobileBar, MobileDrawers } from './MobileChrome';
+import { ShortcutsHelp } from './ShortcutsHelp';
+import { useLevelGuard } from './useLevelGuard';
 
 const Viewer3D = lazy(() => import('@/modules/Editor3D/Viewer3D'));
 
@@ -19,6 +21,7 @@ function Loading() {
 
 export function AppShell() {
   useShortcuts();
+  useLevelGuard();
   const view = useEditorStore((s) => s.view);
   const walk = view === 'walk';
   const compact = useCompact();
@@ -72,6 +75,7 @@ export function AppShell() {
         )}
       </div>
       <StatusBar />
+      <ShortcutsHelp />
     </div>
   );
 }

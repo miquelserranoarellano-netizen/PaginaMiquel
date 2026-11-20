@@ -6,7 +6,6 @@ import { Button } from '@/modules/UI/controls';
 import { toast } from '@/modules/UI/toast';
 import { useEditorStore } from '@/store/editorStore';
 import { projectApi } from '@/store/projectStore';
-import { fileToDataUrl, measureModel, parseModel } from './gltf';
 import { insertionPoint } from './placementActions';
 
 const MAX_SIZE = 60 * 1024 * 1024;
@@ -23,6 +22,7 @@ export function ImportModelButton() {
     setBusy(true);
     try {
       const buffer = await file.arrayBuffer();
+      const { fileToDataUrl, measureModel, parseModel } = await import('./gltf');
       const scene = await parseModel(buffer);
       const dims = measureModel(scene);
       const dataUrl = await fileToDataUrl(new Blob([buffer], { type: name.endsWith('.glb') ? 'model/gltf-binary' : 'model/gltf+json' }));

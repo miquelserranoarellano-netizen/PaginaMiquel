@@ -8,7 +8,7 @@ import { fileURLToPath, URL } from 'node:url';
 // En producción se añade una Content-Security-Policy estricta (todo es local, sin red).
 const CSP =
   "default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; " +
-  "script-src 'self'; worker-src 'self' blob:; connect-src 'self' data: blob:; font-src 'self' data:";
+  "script-src 'self'; worker-src 'self' blob:; connect-src 'self' data: blob: https://*.supabase.co wss://*.supabase.co; font-src 'self' data:";
 
 export default defineConfig(({ command }) => ({
   base: './',

@@ -6,9 +6,10 @@
  */
 import { createStore, del, entries, get, set } from 'idb-keyval';
 import type { ProjectDoc, ProjectMeta } from '@/modules/FloorPlan/types';
+import { cloudActive, cloudAdapter } from './cloud';
 
 export interface StorageAdapter {
-  kind: 'desktop' | 'browser';
+  kind: 'desktop' | 'browser' | 'cloud';
   list(): Promise<ProjectMeta[]>;
   load(id: string): Promise<unknown>;
   save(doc: ProjectDoc, meta: ProjectMeta): Promise<void>;
@@ -100,7 +101,8 @@ let volatile = false;
 /** true si los proyectos solo se guardan en memoria (se pierden al cerrar). */
 export const isVolatileStorage = (): boolean => volatile;
 
-export function getStorage(): StorageAdapter {
+/** Almacenamiento local (escritorio o navegador). */
+function localStorageAdapter(): StorageAdapter {
   if (adapter) return adapter;
   if (typeof window !== 'undefined' && window.homeDesign?.isDesktop) {
     adapter = desktopAdapter();
@@ -128,5 +130,16 @@ export function getStorage(): StorageAdapter {
   };
   return adapter;
 }
+
+let cloud: StorageAdapter | null = null;
+
+/** Adaptador activo: la nube (Supabase) si hay sesión iniciada; si no, este dispositivo. */
+export function getStorage(): StorageAdapter {
+  if (cloudActive()) return (cloud ??= cloudAdapter());
+  return localStorageAdapter();
+}
+
+/** Almacenamiento de este dispositivo, aunque haya sesión en la nube (para migrar proyectos). */
+export const getLocalStorage = (): StorageAdapter => localStorageAdapter();
 
 export const isDesktop = (): boolean => typeof window !== 'undefined' && !!window.homeDesign?.isDesktop;

@@ -72,7 +72,9 @@ interface EditorState {
   cameraRequest: { mode: 'exterior' | 'top' | 'interior'; n: number };
   walkFreeCamera: boolean;
   mobilePanel: MobilePanel;
+  helpOpen: boolean;
 
+  setHelpOpen: (v: boolean) => void;
   setMobilePanel: (p: MobilePanel) => void;
   setScreen: (s: Screen) => void;
   setView: (v: ViewMode) => void;
@@ -139,7 +141,9 @@ export const useEditorStore = create<EditorState>()((set) => ({
   cameraRequest: { mode: 'exterior', n: 0 },
   walkFreeCamera: false,
   mobilePanel: 'none',
+  helpOpen: false,
 
+  setHelpOpen: (helpOpen) => set({ helpOpen }),
   setMobilePanel: (mobilePanel) => set({ mobilePanel }),
   setScreen: (screen) => set({ screen }),
   setView: (view) => set({ view, hover: null }),

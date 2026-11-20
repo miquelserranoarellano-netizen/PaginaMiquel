@@ -39,6 +39,8 @@ export type FurnitureCategory =
   | 'lamparas'
   | 'decoracion'
   | 'exterior'
+  | 'climatizacion'
+  | 'estructura'
   | 'importados';
 
 export interface MaterialSlot extends SurfaceMaterial {
@@ -105,5 +107,7 @@ export const CATEGORY_LABELS: Record<FurnitureCategory, string> = {
   lamparas: 'Lámparas',
   decoracion: 'Decoración',
   exterior: 'Exterior',
+  climatizacion: 'Climatización',
+  estructura: 'Escaleras y estructura',
   importados: 'Modelos importados',
 };

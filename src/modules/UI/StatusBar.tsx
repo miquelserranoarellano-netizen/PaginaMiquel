@@ -1,3 +1,5 @@
+import { useMemo } from 'react';
+import { Keyboard } from 'lucide-react';
 import { distance, polygonArea } from '@/core/geometry';
 import { formatArea, formatLength, formatNumber } from '@/core/units';
 import { summarize } from '@/modules/FloorPlan/queries';
@@ -44,7 +46,8 @@ export function StatusBar() {
   const doc = useProjectStore((s) => s.doc);
   const saveStatus = useSaveStore((s) => s.status);
   const lastSavedAt = useSaveStore((s) => s.lastSavedAt);
-  const sum = summarize(doc, levelId);
+  const sum = useMemo(() => summarize(doc, levelId), [doc, levelId]);
+  const setHelpOpen = useEditorStore((s) => s.setHelpOpen);
   const level = doc.levels[levelId];
   return (
     <footer className="flex h-7 shrink-0 items-center gap-4 border-t border-slate-200 bg-white px-3 text-[11.5px] text-slate-500">
@@ -59,6 +62,9 @@ export function StatusBar() {
         </span>
         <span>{sum.walls} muros · {sum.openings} huecos · {sum.furniture} objetos</span>
         {view === '2d' && <span className="tabular-nums">Zoom {Math.round((zoom / 50) * 100)}%</span>}
+        <button type="button" onClick={() => setHelpOpen(true)} className="flex items-center gap-1 rounded px-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-800" title="Atajos de teclado (?)">
+          <Keyboard size={13} /> Atajos
+        </button>
         <span className={saveStatus === 'error' ? 'text-red-600' : ''}>
           {saveStatus === 'saved' && lastSavedAt ? `Guardado ${new Date(lastSavedAt).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}` : saveStatus === 'saving' ? 'Guardando…' : saveStatus === 'dirty' ? 'Pendiente de guardar' : saveStatus === 'error' ? 'Error al guardar' : ''}
         </span>

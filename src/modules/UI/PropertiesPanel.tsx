@@ -2,7 +2,8 @@ import { Copy, Trash2 } from 'lucide-react';
 import { formatArea, formatLength } from '@/core/units';
 import { distance, polygonArea } from '@/core/geometry';
 import type { Dimension, ElementRef, ProjectDoc } from '@/modules/FloorPlan/types';
-import { deleteElements, duplicateElements } from '@/modules/FloorPlan/queries';
+import { duplicateElements } from '@/modules/FloorPlan/queries';
+import { deleteWithUndo } from './actions';
 import { WallProperties, MultiWallProperties, DeleteSection } from '@/modules/Walls/WallProperties';
 import { RoomProperties } from '@/modules/Rooms/RoomProperties';
 import { OpeningProperties } from '@/modules/DoorsAndWindows/OpeningProperties';
@@ -23,7 +24,7 @@ function DimensionProperties({ dim }: { dim: Dimension }) {
           <NumberField value={dim.offset} min={-20} max={20} unit="m" length onChange={(v) => projectApi.apply((d) => void (d.dimensions[dim.id].offset = v))} />
         </Field>
       </Section>
-      <DeleteSection label="Eliminar cota" onDelete={() => projectApi.apply((d) => deleteElements(d, [{ kind: 'dimension', id: dim.id }]))} />
+      <DeleteSection label="Eliminar cota" refs={[{ kind: 'dimension', id: dim.id }]} />
     </>
   );
 }
@@ -53,10 +54,7 @@ function MultiSelection({ doc, refs }: { doc: ProjectDoc; refs: ElementRef[] }) 
           </Button>
           <Button
             variant="danger"
-            onClick={() => {
-              projectApi.apply((d) => deleteElements(d, refs));
-              useEditorStore.getState().clearSelection();
-            }}
+            onClick={() => deleteWithUndo(refs)}
           >
             <Trash2 size={14} /> Eliminar
           </Button>

@@ -1,7 +1,6 @@
 import { ArrowLeftRight, FlipVertical2 } from 'lucide-react';
 import { LIMITS } from '@/modules/FloorPlan/defaults';
 import type { Opening, OpeningKind } from '@/modules/FloorPlan/types';
-import { deleteElements } from '@/modules/FloorPlan/queries';
 import { MaterialPicker } from '@/modules/Materials/MaterialPicker';
 import { wallFrame } from '@/modules/Walls/geometry';
 import { clampOpenings } from '@/modules/Walls/ops';
@@ -67,7 +66,7 @@ export function OpeningProperties({ opening }: { opening: Opening }) {
         <MaterialPicker label="Marco" category="metal" value={opening.frame} onChange={(m) => set((o) => (o.frame = m))} />
         <MaterialPicker label={isDoor && opening.kind !== 'french-window' ? 'Hoja' : 'Vidrio / hoja'} category={isDoor ? 'madera' : 'vidrio'} value={opening.panel} onChange={(m) => set((o) => (o.panel = m))} />
       </Section>
-      <DeleteSection label={isDoor ? 'Eliminar puerta' : 'Eliminar ventana'} onDelete={() => projectApi.apply((d) => deleteElements(d, [{ kind: 'opening', id }]))} />
+      <DeleteSection label={isDoor ? 'Eliminar puerta' : 'Eliminar ventana'} refs={[{ kind: 'opening', id }]} />
     </>
   );
 }

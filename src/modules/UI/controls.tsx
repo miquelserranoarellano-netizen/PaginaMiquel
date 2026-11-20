@@ -56,17 +56,25 @@ interface NumberFieldProps {
 }
 
 /**
- * Campo numérico con validación: confirma con Enter o al salir; Esc cancela;
- * flechas ↑/↓ incrementan (Mayús ×10). Muestra el error si el valor está fuera de rango.
+ * Campo numérico con validación. Aplica el valor mientras se escribe (con una
+ * breve pausa), al salir del campo o con Enter; Esc cancela; flechas ↑/↓
+ * incrementan (Mayús ×10). En pantallas táctiles muestra botones − y +.
  */
 export function NumberField({ value, onChange, min = -Infinity, max = Infinity, step = 0.01, digits = 2, unit, length, disabled, title }: NumberFieldProps) {
   const [text, setText] = useState(() => formatNumber(value, digits));
   const [error, setError] = useState<string | null>(null);
   const focused = useRef(false);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const valueRef = useRef(value);
+  valueRef.current = value;
+  const touch = useTouchControls();
 
   useEffect(() => {
     if (!focused.current) setText(formatNumber(value, digits));
   }, [value, digits]);
+  useEffect(() => () => {
+    if (timer.current) clearTimeout(timer.current);
+  }, []);
 
   const parse = (s: string): number | null => {
     if (length) return parseLength(s);
@@ -74,26 +82,45 @@ export function NumberField({ value, onChange, min = -Infinity, max = Infinity, 
     return Number.isFinite(n) ? n : null;
   };
 
-  const commit = (s: string) => {
+  const validate = (s: string): number | null => {
     const n = parse(s);
     if (n === null) {
-      setError('Valor no válido');
-      return;
+      setError('Escribe un número, por ejemplo 1,20');
+      return null;
     }
     if (n < min || n > max) {
       setError(`Debe estar entre ${formatNumber(min, digits)} y ${formatNumber(max, digits)}${unit ? ' ' + unit : ''}`);
-      return;
+      return null;
     }
     setError(null);
-    if (Math.abs(n - value) > 1e-9) onChange(n);
-    setText(formatNumber(n, digits));
+    return n;
   };
 
-  return (
-    <div className="relative">
+  const commit = (s: string, reformat = true) => {
+    if (timer.current) {
+      clearTimeout(timer.current);
+      timer.current = null;
+    }
+    const n = validate(s);
+    if (n === null) return;
+    if (Math.abs(n - valueRef.current) > 1e-9) onChange(n);
+    if (reformat) setText(formatNumber(n, digits));
+  };
+
+  const nudge = (dir: 1 | -1, big = false) => {
+    const cur = parse(text) ?? value;
+    const n = Math.round(Math.min(max, Math.max(min, cur + dir * step * (big ? 10 : 1))) * 1e6) / 1e6;
+    setText(formatNumber(n, digits));
+    setError(null);
+    onChange(n);
+  };
+
+  const input = (
+    <div className="relative min-w-0 flex-1">
       <input
         type="text"
         inputMode="decimal"
+        enterKeyHint="done"
         disabled={disabled}
         title={error ?? title}
         className={cx(inputBase, 'pr-8 tabular-nums', error ? 'border-red-400 focus:border-red-500 focus:ring-red-100' : 'border-slate-200', disabled && 'bg-slate-50 text-slate-400')}
@@ -106,29 +133,64 @@ export function NumberField({ value, onChange, min = -Infinity, max = Infinity, 
           focused.current = false;
           commit(e.currentTarget.value);
         }}
-        onChange={(e) => setText(e.target.value)}
+        onChange={(e) => {
+          const v = e.target.value;
+          setText(v);
+          // Se aplica tras una pausa al escribir (en el móvil no hay tecla Intro).
+          if (timer.current) clearTimeout(timer.current);
+          timer.current = setTimeout(() => commit(v, false), 700);
+        }}
         onKeyDown={(e) => {
           e.stopPropagation();
           if (e.key === 'Enter') {
             commit(e.currentTarget.value);
             e.currentTarget.blur();
           } else if (e.key === 'Escape') {
+            if (timer.current) clearTimeout(timer.current);
             setText(formatNumber(value, digits));
             setError(null);
             e.currentTarget.blur();
           } else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
             e.preventDefault();
-            const cur = parse(e.currentTarget.value) ?? value;
-            const n = Math.min(max, Math.max(min, cur + (e.key === 'ArrowUp' ? 1 : -1) * step * (e.shiftKey ? 10 : 1)));
-            setText(formatNumber(n, digits));
-            onChange(n);
+            nudge(e.key === 'ArrowUp' ? 1 : -1, e.shiftKey);
           }
         }}
       />
       {unit && <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[11px] text-slate-400">{unit}</span>}
+    </div>
+  );
+
+  return (
+    <div>
+      {touch && !disabled ? (
+        <div className="flex items-center gap-1">
+          <button type="button" aria-label="Menos" onClick={() => nudge(-1)} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-slate-200 bg-white text-[18px] text-slate-600 active:bg-slate-100">
+            −
+          </button>
+          {input}
+          <button type="button" aria-label="Más" onClick={() => nudge(1)} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-slate-200 bg-white text-[18px] text-slate-600 active:bg-slate-100">
+            +
+          </button>
+        </div>
+      ) : (
+        input
+      )}
       {error && <p className="mt-1 text-[11px] text-red-500">{error}</p>}
     </div>
   );
+}
+
+/** Controles táctiles (botones − / +) en dispositivos con puntero grueso. */
+function useTouchControls(): boolean {
+  const [touch, setTouch] = useState(() => typeof window !== 'undefined' && !!window.matchMedia?.('(pointer: coarse)').matches);
+  useEffect(() => {
+    const m = window.matchMedia?.('(pointer: coarse)');
+    if (!m) return;
+    const on = () => setTouch(m.matches);
+    m.addEventListener('change', on);
+    return () => m.removeEventListener('change', on);
+  }, []);
+  return touch;
 }
 
 export function TextField({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder?: string }) {

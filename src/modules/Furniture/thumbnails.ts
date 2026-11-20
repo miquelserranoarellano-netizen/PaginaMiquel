@@ -1,67 +1,44 @@
 /**
  * Miniaturas 3D de la biblioteca, renderizadas bajo demanda con un único
- * renderizador fuera de pantalla y guardadas en memoria.
+ * renderizador fuera de pantalla y guardadas en memoria. El renderizador
+ * (three.js) se carga solo cuando hace falta la primera miniatura.
  */
 import { useEffect, useState } from 'react';
-import { ACESFilmicToneMapping, Box3, DirectionalLight, HemisphereLight, PerspectiveCamera, Scene, SRGBColorSpace, Vector3, WebGLRenderer } from 'three';
 import type { CatalogItem } from './types';
-import { buildCatalogObject } from './buildObject';
 
-const W = 192;
-const H = 144;
+type Render = (item: CatalogItem) => string | null;
 const cache = new Map<string, string>();
 const listeners = new Map<string, Set<(url: string) => void>>();
 const queue: CatalogItem[] = [];
-let renderer: WebGLRenderer | null = null;
+let renderItem: Render | null = null;
+let loading = false;
 let failed = false;
 let scheduled = false;
 
-function setup() {
-  if (renderer || failed) return renderer;
-  try {
-    renderer = new WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
-    renderer.setSize(W, H, false);
-    renderer.setClearColor(0x000000, 0);
-    renderer.outputColorSpace = SRGBColorSpace;
-    renderer.toneMapping = ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.15;
-  } catch {
-    failed = true;
-    renderer = null;
-  }
-  return renderer;
-}
-
-function renderItem(item: CatalogItem): string | null {
-  const r = setup();
-  if (!r) return null;
-  const scene = new Scene();
-  scene.add(new HemisphereLight('#ffffff', '#b9b2a6', 1.6));
-  const sun = new DirectionalLight('#ffffff', 2.2);
-  sun.position.set(3, 6, 4);
-  scene.add(sun);
-  const obj = buildCatalogObject(item, item.w, item.d, item.h);
-  scene.add(obj);
-  const box = new Box3().setFromObject(obj);
-  const size = box.getSize(new Vector3());
-  const center = box.getCenter(new Vector3());
-  const radius = Math.max(0.05, size.length() / 2);
-  const camera = new PerspectiveCamera(30, W / H, 0.01, 200);
-  const dir = new Vector3(1, 0.85, 1.5).normalize();
-  camera.position.copy(center).addScaledVector(dir, (radius / Math.sin((15 * Math.PI) / 180)) * 1.02);
-  camera.lookAt(center);
-  r.render(scene, camera);
-  return r.domElement.toDataURL('image/png');
-}
-
 function pump() {
   scheduled = false;
+  if (!renderItem) {
+    if (loading) return;
+    loading = true;
+    import('./thumbnailRenderer')
+      .then((m) => {
+        renderItem = m.renderItem;
+        schedule();
+      })
+      .catch(() => {
+        failed = true;
+        queue.length = 0;
+      })
+      .finally(() => (loading = false));
+    return;
+  }
   const start = performance.now();
   while (queue.length && performance.now() - start < 24) {
     const item = queue.shift()!;
     if (cache.has(item.id)) continue;
     const url = renderItem(item);
     if (!url) {
+      failed = true;
       queue.length = 0;
       return;
     }

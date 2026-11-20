@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Layers, Plus } from 'lucide-react';
-import { sortedLevels } from '@/modules/FloorPlan/queries';
 import { addLevel } from '@/modules/FloorPlan/levels';
 import { useEditorStore } from '@/store/editorStore';
 import { projectApi, useProjectStore } from '@/store/projectStore';
@@ -12,7 +11,7 @@ export function LevelBar() {
   const active = useEditorStore((s) => s.activeLevelId);
   const setActive = useEditorStore((s) => s.setActiveLevel);
   const [menu, setMenu] = useState(false);
-  const list = sortedLevels({ levels } as never);
+  const list = Object.values(levels).sort((a, b) => a.order - b.order);
 
   const add = (copy: boolean) => {
     let id = '';

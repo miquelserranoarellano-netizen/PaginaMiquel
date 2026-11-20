@@ -1,12 +1,28 @@
 import { formatArea, formatLength } from '@/core/units';
 import { perimeter, polygonArea } from '@/core/geometry';
 import type { Room, RoomType } from '@/modules/FloorPlan/types';
-import { deleteElements } from '@/modules/FloorPlan/queries';
 import { MaterialPicker } from '@/modules/Materials/MaterialPicker';
 import { DeleteSection } from '@/modules/Walls/WallProperties';
-import { Field, NumberField, Section, SelectField, Stat, TextField, Toggle } from '@/modules/UI/controls';
+import { Button, Field, NumberField, Section, SelectField, Stat, TextField, Toggle } from '@/modules/UI/controls';
+import { Sparkles } from 'lucide-react';
+import { furnishRoom, type FurnishResult } from '@/modules/Furniture/autoFurnish';
+import { toast } from '@/modules/UI/toast';
+import { useProjectStore } from '@/store/projectStore';
 import { projectApi } from '@/store/projectStore';
 import { ROOM_TYPES, getRoomType } from './roomTypes';
+
+/** Amuebla la estancia y avisa con opción de deshacer. */
+function furnish(id: string) {
+  let res: FurnishResult = { added: [], skipped: [] };
+  projectApi.apply((d) => {
+    res = furnishRoom(d, id);
+  });
+  if (!res.added.length) {
+    toast.info('No hay sitio libre para añadir muebles en esta estancia');
+    return;
+  }
+  toast.action(`${res.added.length} muebles colocados${res.skipped.length ? ` · sin sitio: ${res.skipped.slice(0, 3).join(', ')}` : ''}`, 'Deshacer', () => useProjectStore.getState().undo());
+}
 
 export function RoomProperties({ room }: { room: Room }) {
   const id = room.id;
@@ -44,6 +60,9 @@ export function RoomProperties({ room }: { room: Room }) {
         <Field label="Color en plano">
           <input type="color" className="h-7 w-full cursor-pointer rounded-md border border-slate-200 bg-white" value={room.color} onChange={(e) => set((r) => (r.color = e.target.value))} />
         </Field>
+        <Button variant="primary" className="w-full" onClick={() => furnish(id)} title="Coloca los muebles típicos de este tipo de estancia">
+          <Sparkles size={14} /> Amueblar estancia
+        </Button>
       </Section>
       <Section title="Suelo y techo">
         <MaterialPicker label="Suelo" category="suelo" value={room.floor} onChange={(m) => set((r) => (r.floor = m))} />
@@ -62,7 +81,7 @@ export function RoomProperties({ room }: { room: Room }) {
           </>
         )}
       </Section>
-      <DeleteSection label="Eliminar estancia" onDelete={() => projectApi.apply((d) => deleteElements(d, [{ kind: 'room', id }]))} />
+      <DeleteSection label="Eliminar estancia" refs={[{ kind: 'room', id }]} />
     </>
   );
 }

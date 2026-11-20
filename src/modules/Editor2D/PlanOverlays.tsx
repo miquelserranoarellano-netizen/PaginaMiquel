@@ -31,7 +31,7 @@ export function PlanOverlays({ size }: { size: Size }) {
 
   return (
     <>
-      {!compact && <div className="pointer-events-none absolute bottom-3 left-1/2 max-w-[70%] -translate-x-1/2 truncate rounded-full bg-slate-900/75 px-3.5 py-1.5 text-[11.5px] text-white shadow">{HINTS[tool]}</div>}
+      {!compact && <div className="pointer-events-none absolute bottom-3 left-1/2 max-w-[calc(100%-22rem)] -translate-x-1/2 truncate rounded-full bg-slate-900/75 px-3.5 py-1.5 text-[11.5px] text-white shadow">{HINTS[tool]}</div>}
       <div className="pointer-events-none absolute bottom-4 left-4 flex flex-col items-start gap-1">
         <div className="text-[11px] font-medium text-slate-600">{meters < 1 ? `${formatNumber(meters * 100, 0)} cm` : `${formatNumber(meters, 0)} m`}</div>
         <div className="h-1.5 border-x-2 border-b-2 border-slate-600" style={{ width: px }} />

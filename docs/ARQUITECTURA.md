@@ -45,7 +45,7 @@ sincronizados el plano 2D y el modelo 3D.
 | Estado | Zustand + Immer | Store mínimo, actualizaciones inmutables con *structural sharing* (historial barato) |
 | Estilos | Tailwind CSS 4 | Interfaz consistente sin hojas de estilo dispersas |
 | Escritorio | **Electron** | Ver decisión D1 |
-| Persistencia | Ficheros JSON locales (Electron) / IndexedDB (navegador) | Sin cuentas ni servidores |
+| Persistencia | Ficheros JSON locales (Electron) / IndexedDB (navegador) / Supabase opcional | Funciona sin cuentas; la nube es opcional |
 | PDF | jsPDF | Exportación de planos con cajetín |
 | Tests | Vitest | Geometría y operaciones del modelo |
 
@@ -144,6 +144,13 @@ trazado de muros se hace en 2D (es donde se puede dibujar con precisión).
 * Navegador: IndexedDB (mismo formato).
 * Al abrir/importar, `normalizeProject()` valida la estructura, migra versiones
   y rellena valores por defecto; los errores se muestran sin perder datos.
+* Si IndexedDB no responde (ventana privada, marcos restringidos) se usa memoria
+  y la interfaz avisa de que hay que exportar.
+* Nube (opcional): `ProjectManager/cloud.ts` implementa el mismo `StorageAdapter`
+  sobre Supabase (`supabase/schema.sql`: tabla `projects` con clave
+  `(user_id, id)`, columnas `meta` y `doc` en JSONB y RLS `auth.uid() = user_id`).
+  `getStorage()` elige la nube si hay sesión iniciada y el almacenamiento local en
+  caso contrario; el cliente `@supabase/supabase-js` se carga bajo demanda.
 
 ## 9. Decisiones y soluciones alternativas
 
@@ -173,6 +180,11 @@ trazado de muros se hace en 2D (es donde se puede dibujar con precisión).
   un estilo *Entorno* (cielo y terreno). Un `EffectComposer` aplica oclusión
   ambiental N8AO, SMAA y tone mapping ACES; se puede desactivar ("Calidad alta")
   en equipos modestos.
+* **D9 – Carga bajo demanda.** El arranque no incluye three.js: el visor 3D, el
+  renderizador de miniaturas, el importador GLB, jsPDF, el exportador GLTF y el
+  cliente de Supabase son *chunks* dinámicos. Las texturas se dibujan en canvas
+  (`Materials/patterns.ts`, sin three) y se convierten a `CanvasTexture` solo en
+  el 3D (`Materials/textures.ts`).
 * **D7 – Escaleras.** Las plantas se apilan en 3D; en el recorrido se cambia de
   planta desde el selector (no hay subida física por escaleras).
 

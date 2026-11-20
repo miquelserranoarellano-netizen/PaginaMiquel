@@ -1,11 +1,10 @@
 import { FlipHorizontal2, Scissors, Trash2 } from 'lucide-react';
 import { formatArea } from '@/core/units';
 import { LIMITS } from '@/modules/FloorPlan/defaults';
-import type { Wall } from '@/modules/FloorPlan/types';
-import { deleteElements } from '@/modules/FloorPlan/queries';
+import type { ElementRef, Wall } from '@/modules/FloorPlan/types';
+import { deleteWithUndo } from '@/modules/UI/actions';
 import { MaterialPicker } from '@/modules/Materials/MaterialPicker';
 import { Button, Field, NumberField, Section, Stat } from '@/modules/UI/controls';
-import { useEditorStore } from '@/store/editorStore';
 import { projectApi } from '@/store/projectStore';
 import { wallFrame } from './geometry';
 import { clampOpenings, flipWall, setWallAngle, setWallLength, splitWall } from './ops';
@@ -48,22 +47,15 @@ export function WallProperties({ wall }: { wall: Wall }) {
         <MaterialPicker label="Cara A (izquierda)" category="pared" value={wall.sideA} onChange={(m) => set((w) => (w.sideA = m))} />
         <MaterialPicker label="Cara B (derecha)" category="pared" value={wall.sideB} onChange={(m) => set((w) => (w.sideB = m))} />
       </Section>
-      <DeleteSection onDelete={() => projectApi.apply((d) => deleteElements(d, [{ kind: 'wall', id }]))} label="Eliminar muro" />
+      <DeleteSection refs={[{ kind: 'wall', id }]} label="Eliminar muro" />
     </>
   );
 }
 
-export function DeleteSection({ onDelete, label }: { onDelete: () => void; label: string }) {
+export function DeleteSection({ refs, label }: { refs: ElementRef[]; label: string }) {
   return (
     <div className="p-4">
-      <Button
-        variant="danger"
-        className="w-full"
-        onClick={() => {
-          onDelete();
-          useEditorStore.getState().clearSelection();
-        }}
-      >
+      <Button variant="danger" className="w-full" onClick={() => deleteWithUndo(refs)}>
         <Trash2 size={14} /> {label}
       </Button>
     </div>

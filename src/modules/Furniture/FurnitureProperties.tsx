@@ -1,7 +1,7 @@
 import { Copy, RotateCw } from 'lucide-react';
 import { LIMITS } from '@/modules/FloorPlan/defaults';
 import type { FurnitureItem } from '@/modules/FloorPlan/types';
-import { deleteElements, duplicateElements } from '@/modules/FloorPlan/queries';
+import { duplicateElements } from '@/modules/FloorPlan/queries';
 import { MaterialPicker } from '@/modules/Materials/MaterialPicker';
 import { DeleteSection } from '@/modules/Walls/WallProperties';
 import { Button, Field, NumberField, Section, Slider, TextField, Toggle } from '@/modules/UI/controls';
@@ -57,8 +57,8 @@ export function FurnitureProperties({ item }: { item: FurnitureItem }) {
         <Field label="Alto" hint={derived.has('h') ? auto : undefined}>
           <NumberField value={item.height} min={S.min} max={S.max} unit="m" length disabled={derived.has('h')} title={derived.has('h') ? auto : undefined} onChange={(v) => set((f) => (f.height = v))} />
         </Field>
-        <Field label="Elevación" hint="Altura de la base respecto al suelo">
-          <NumberField value={item.elevation} min={0} max={20} unit="m" length onChange={(v) => set((f) => (f.elevation = v))} />
+        <Field label="Desde el suelo" hint="Altura a la que está la base del objeto (0 = apoyado en el suelo)">
+          <NumberField value={item.elevation} min={0} max={20} step={0.05} unit="m" length onChange={(v) => set((f) => (f.elevation = v))} />
         </Field>
         {cat && !cat.derive && (
           <button
@@ -111,7 +111,7 @@ export function FurnitureProperties({ item }: { item: FurnitureItem }) {
           <Copy size={14} /> Duplicar
         </Button>
       </div>
-      <DeleteSection label="Eliminar objeto" onDelete={() => projectApi.apply((d) => deleteElements(d, [{ kind: 'furniture', id }]))} />
+      <DeleteSection label="Eliminar objeto" refs={[{ kind: 'furniture', id }]} />
     </>
   );
 }

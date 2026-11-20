@@ -4,10 +4,16 @@ import { Field, NumberField, Section, Toggle, cx } from '@/modules/UI/controls';
 import { projectApi } from '@/store/projectStore';
 import { analyzeFurniture } from './analysis';
 import { getCatalogItem } from './catalog';
-import { resolveParams } from './params';
+import { TV_BEZEL, TV_STAND_H, pint, resolveParams, tvScreen } from './params';
 import type { CatalogItem, ParamValue } from './types';
 
 const TV_QUICK = [43, 50, 55, 65, 75, 85];
+
+/** Altura del centro de la pantalla desde el suelo. */
+function tvCenter(item: FurnitureItem, catalogId: string): number {
+  const inches = pint(resolveParams(getCatalogItem(catalogId), item.params), 'inches', 55, 24, 110);
+  return Math.round((item.elevation + (catalogId === 'tv-55' ? TV_STAND_H : 0) + TV_BEZEL + tvScreen(inches).h / 2) * 1000) / 1000;
+}
 
 /** Aplica un cambio de parámetros y recalcula las medidas derivadas (manteniendo el centro). */
 export function setFurnitureParam(id: string, key: string, value: ParamValue) {
@@ -53,6 +59,19 @@ export function FurnitureConfig({ item }: { item: FurnitureItem }) {
             </button>
           ))}
         </div>
+      )}
+      {isTv && (
+        <Field label="Centro a" hint="Altura del centro de la pantalla desde el suelo (sentado se ve mejor entre 1,0 y 1,15 m)">
+          <NumberField
+            value={tvCenter(item, cat.id)}
+            min={0.3}
+            max={3}
+            step={0.05}
+            unit="m"
+            length
+            onChange={(v) => projectApi.apply((d) => void (d.furniture[item.id].elevation = Math.max(0, Math.round((v - (tvCenter(item, cat.id) - item.elevation)) * 1000) / 1000)))}
+          />
+        </Field>
       )}
       {cat.params.map((def) =>
         def.kind === 'bool' ? (

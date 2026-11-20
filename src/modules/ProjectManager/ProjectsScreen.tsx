@@ -7,13 +7,16 @@ import { dialog } from '@/modules/UI/dialog';
 import { toast } from '@/modules/UI/toast';
 import { createProject, deleteProject, duplicateProject, exportStoredProject, importProjectFile, listProjects, renameProject } from './actions';
 import { openDocument, openProjectById } from './persistence';
-import { isDesktop } from './storage';
+import { isDesktop, isVolatileStorage } from './storage';
+import { useCloud } from './cloud';
+import { CloudButton, CloudDialog } from './CloudDialog';
 import { createSampleHouse } from './sampleHouse';
 
 const dateFmt = new Intl.DateTimeFormat('es-ES', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
 function ProjectCard({ meta, onChanged }: { meta: ProjectMeta; onChanged: () => void }) {
   const [menu, setMenu] = useState(false);
+  const inCloud = useCloud((s) => !!s.email);
   const run = (fn: () => Promise<void>) => async () => {
     setMenu(false);
     try {
@@ -65,7 +68,7 @@ function ProjectCard({ meta, onChanged }: { meta: ProjectMeta; onChanged: () => 
             type="button"
             className="flex w-full items-center gap-2 px-3 py-2 text-red-600 hover:bg-red-50"
             onClick={run(async () => {
-              const ok = await dialog.confirm({ title: `¿Eliminar "${meta.name}"?`, message: 'El proyecto se borrará de este equipo. Si quieres conservar una copia, expórtalo antes.', confirmText: 'Eliminar', danger: true });
+              const ok = await dialog.confirm({ title: `¿Eliminar "${meta.name}"?`, message: inCloud ? 'El proyecto se borrará de tu cuenta en la nube (en todos tus dispositivos). Si quieres conservar una copia, expórtalo antes.' : 'El proyecto se borrará de este equipo. Si quieres conservar una copia, expórtalo antes.', confirmText: 'Eliminar', danger: true });
               if (ok) await deleteProject(meta.id);
             })}
           >
@@ -79,7 +82,11 @@ function ProjectCard({ meta, onChanged }: { meta: ProjectMeta; onChanged: () => 
 
 export function ProjectsScreen() {
   const [projects, setProjects] = useState<ProjectMeta[] | null>(null);
+  const [cloudOpen, setCloudOpen] = useState(false);
+  const email = useCloud((s) => s.email);
+  const cloudReady = useCloud((s) => s.ready);
   const refresh = useCallback(() => {
+    if (!useCloud.getState().ready) return;
     listProjects()
       .then(setProjects)
       .catch((e) => {
@@ -87,7 +94,7 @@ export function ProjectsScreen() {
         setProjects([]);
       });
   }, []);
-  useEffect(refresh, [refresh]);
+  useEffect(refresh, [refresh, email, cloudReady]);
 
   return (
     <div className="h-full overflow-y-auto bg-canvas thin-scroll">
@@ -101,6 +108,7 @@ export function ProjectsScreen() {
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
+            <CloudButton onClick={() => setCloudOpen(true)} />
             <Button
               onClick={async () => {
                 const doc = await importProjectFile();
@@ -126,7 +134,7 @@ export function ProjectsScreen() {
         </header>
 
         <section className="mt-8">
-          <h2 className="mb-3 text-[12px] font-semibold uppercase tracking-wider text-slate-500">Mis proyectos</h2>
+          <h2 className="mb-3 text-[12px] font-semibold uppercase tracking-wider text-slate-500">{email ? 'Mis proyectos en la nube' : 'Mis proyectos'}</h2>
           {projects === null ? (
             <p className="text-slate-500">Cargando…</p>
           ) : projects.length === 0 ? (
@@ -152,9 +160,16 @@ export function ProjectsScreen() {
           )}
         </section>
         <footer className="mt-10 text-[11.5px] text-slate-400">
-          {isDesktop() ? 'Los proyectos se guardan en la carpeta de datos de la aplicación, con copia de seguridad automática.' : 'Los proyectos se guardan en este navegador (IndexedDB). Usa “Exportar” para hacer copias de seguridad.'}
+          {email
+            ? `Los proyectos se guardan en tu cuenta de Supabase (${email}).`
+            : isDesktop()
+              ? 'Los proyectos se guardan en la carpeta de datos de la aplicación, con copia de seguridad automática.'
+              : isVolatileStorage()
+                ? 'Este navegador no deja guardar datos: los proyectos se perderán al cerrar. Expórtalos o guárdalos en la nube.'
+                : 'Los proyectos se guardan en este navegador. Usa “Guardar en la nube” para tenerlos en todos tus dispositivos, o “Exportar” para hacer copias.'}
         </footer>
       </div>
+      {cloudOpen && <CloudDialog onClose={() => setCloudOpen(false)} onChanged={refresh} />}
     </div>
   );
 }

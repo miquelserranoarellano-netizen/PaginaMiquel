@@ -3,7 +3,7 @@
  * procedurales (o un color liso para pinturas, vidrio, etc.).
  */
 import type { MaterialDef } from './library';
-import { getPatternCanvas } from './textures';
+import { getPatternCanvas } from './patterns';
 
 const cache = new Map<string, string>();
 

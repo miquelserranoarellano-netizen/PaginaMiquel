@@ -1,6 +1,8 @@
 import { useEffect } from 'react';
 import { type ElementRef, COLLECTION } from '@/modules/FloorPlan/types';
-import { deleteElements, duplicateElements, translateElements } from '@/modules/FloorPlan/queries';
+import { duplicateElements, translateElements } from '@/modules/FloorPlan/queries';
+import { deleteWithUndo } from './actions';
+import { toast } from './toast';
 import { saveNow } from '@/modules/ProjectManager/persistence';
 import { normalizeDeg } from '@/core/units';
 import { type ToolId, useEditorStore } from '@/store/editorStore';
@@ -65,6 +67,10 @@ export function useShortcuts() {
         pasteCount++;
         let out: ElementRef[] = [];
         const refs = clipboard.filter((r) => !!projectApi.doc[COLLECTION[r.kind]][r.id]);
+        if (!refs.length) {
+          toast.info('Lo que copiaste ya no existe en el proyecto');
+          return;
+        }
         projectApi.apply((d) => {
           out = duplicateElements(d, refs, { x: 0.5 * pasteCount, y: 0.5 * pasteCount });
         });
@@ -84,8 +90,11 @@ export function useShortcuts() {
 
       if ((e.key === 'Delete' || e.key === 'Backspace') && sel.length) {
         e.preventDefault();
-        projectApi.apply((d) => deleteElements(d, sel));
-        ed.clearSelection();
+        deleteWithUndo(sel);
+        return;
+      }
+      if (e.key === '?') {
+        ed.setHelpOpen(true);
         return;
       }
       if (e.key === 'Escape') {

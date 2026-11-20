@@ -3,15 +3,21 @@ import { AlertTriangle, CheckCircle2, Info, X } from 'lucide-react';
 import { cx } from './controls';
 
 export type ToastKind = 'info' | 'success' | 'error';
+interface ToastAction {
+  label: string;
+  run: () => void;
+}
+
 interface Toast {
   id: number;
   kind: ToastKind;
   message: string;
+  action?: ToastAction;
 }
 
 interface ToastState {
   toasts: Toast[];
-  push: (kind: ToastKind, message: string) => void;
+  push: (kind: ToastKind, message: string, action?: ToastAction) => void;
   dismiss: (id: number) => void;
 }
 
@@ -19,10 +25,10 @@ let next = 1;
 
 export const useToasts = create<ToastState>()((set) => ({
   toasts: [],
-  push: (kind, message) => {
+  push: (kind, message, action) => {
     const id = next++;
-    set((s) => ({ toasts: [...s.toasts.slice(-3), { id, kind, message }] }));
-    setTimeout(() => set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) })), kind === 'error' ? 7000 : 3500);
+    set((s) => ({ toasts: [...s.toasts.slice(-3), { id, kind, message, action }] }));
+    setTimeout(() => set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) })), kind === 'error' ? 7000 : action ? 6000 : 3500);
   },
   dismiss: (id) => set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) })),
 }));
@@ -31,12 +37,14 @@ export const toast = {
   info: (m: string) => useToasts.getState().push('info', m),
   success: (m: string) => useToasts.getState().push('success', m),
   error: (m: string) => useToasts.getState().push('error', m),
+  /** Aviso con botón de acción (p. ej. "Deshacer"). */
+  action: (m: string, label: string, run: () => void) => useToasts.getState().push('info', m, { label, run }),
 };
 
 export function Toaster() {
   const { toasts, dismiss } = useToasts();
   return (
-    <div className="pointer-events-none fixed bottom-12 left-1/2 z-50 flex w-[calc(100%-1.5rem)] max-w-md -translate-x-1/2 flex-col items-center gap-2 max-[900px]:bottom-28">
+    <div className="pointer-events-none fixed bottom-12 left-1/2 z-[70] flex w-[calc(100%-1.5rem)] max-w-md -translate-x-1/2 flex-col items-center gap-2 max-[900px]:bottom-28">
       {toasts.map((t) => (
         <div
           key={t.id}
@@ -47,6 +55,18 @@ export function Toaster() {
         >
           {t.kind === 'error' ? <AlertTriangle size={16} /> : t.kind === 'success' ? <CheckCircle2 size={16} className="text-accent-600" /> : <Info size={16} className="text-sky-600" />}
           <span>{t.message}</span>
+          {t.action && (
+            <button
+              type="button"
+              className="ml-1 rounded-md px-2 py-0.5 text-[12.5px] font-semibold text-accent-700 hover:bg-accent-50"
+              onClick={() => {
+                t.action!.run();
+                dismiss(t.id);
+              }}
+            >
+              {t.action.label}
+            </button>
+          )}
           <button type="button" className="ml-1 text-slate-400 hover:text-slate-700" onClick={() => dismiss(t.id)} aria-label="Cerrar">
             <X size={14} />
           </button>
