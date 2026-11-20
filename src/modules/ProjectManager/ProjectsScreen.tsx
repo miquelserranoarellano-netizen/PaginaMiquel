@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Copy, Download, FolderOpen, Home, MoreHorizontal, Pencil, Plus, Trash2, Upload } from 'lucide-react';
+import { Copy, Download, FolderOpen, Home, MoreHorizontal, Pencil, Plus, Trash2, Upload, UploadCloud } from 'lucide-react';
 import { formatArea } from '@/core/units';
 import type { ProjectMeta } from '@/modules/FloorPlan/types';
 import { Button } from '@/modules/UI/controls';
@@ -10,7 +10,9 @@ import { openDocument, openProjectById } from './persistence';
 import { useStorageLocation } from './storage';
 import { useCloud } from './cloud';
 import { CloudButton, CloudDialog } from './CloudDialog';
-import { useAccount } from './account';
+import { accountAdapter, isWeb, useAccount } from './account';
+import { getLocalStorage } from './storage';
+import { uploadLocalProjects } from './migrate';
 import { AccountButton, AccountDialog } from './AccountDialog';
 import { createSampleHouse } from './sampleHouse';
 
@@ -106,6 +108,25 @@ export function ProjectsScreen() {
   }, []);
   useEffect(refresh, [refresh, email, cloudReady, accounts, username]);
 
+  // Proyectos que están solo en este navegador (para guardarlos en la cuenta).
+  const [pendingLocal, setPendingLocal] = useState(0);
+  const [uploading, setUploading] = useState(false);
+  useEffect(() => {
+    if (!username || !projects) return setPendingLocal(0);
+    let alive = true;
+    getLocalStorage()
+      .list()
+      .then((here) => {
+        const known = new Map(projects.map((m) => [m.id, m.updatedAt]));
+        if (alive) setPendingLocal(here.filter((m) => (known.get(m.id) ?? -1) < m.updatedAt).length);
+      })
+      .catch(() => alive && setPendingLocal(0));
+    return () => {
+      alive = false;
+    };
+  }, [username, projects]);
+  const web = isWeb();
+
   return (
     <div className="h-full overflow-y-auto bg-canvas thin-scroll">
       <div className="mx-auto max-w-6xl px-4 py-6 sm:px-8 sm:py-10">
@@ -118,8 +139,8 @@ export function ProjectsScreen() {
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
-            {accounts && <AccountButton onClick={() => setAccountOpen(true)} />}
-            {(!accounts || cloudConfigured) && !username && <CloudButton onClick={() => setCloudOpen(true)} />}
+            {web && <AccountButton onClick={() => setAccountOpen(true)} />}
+            {(!web || cloudConfigured) && !username && <CloudButton onClick={() => setCloudOpen(true)} />}
             <Button
               onClick={async () => {
                 const doc = await importProjectFile();
@@ -143,6 +164,33 @@ export function ProjectsScreen() {
             </Button>
           </div>
         </header>
+
+        {pendingLocal > 0 && (
+          <div className="mt-6 flex flex-wrap items-center gap-3 rounded-xl border border-accent-200 bg-accent-50 px-4 py-3">
+            <UploadCloud size={18} className="shrink-0 text-accent-700" />
+            <p className="min-w-0 flex-1 text-[13px] text-accent-900">
+              Tienes {pendingLocal} proyecto{pendingLocal === 1 ? '' : 's'} guardado{pendingLocal === 1 ? '' : 's'} solo en este navegador. Guárdalo{pendingLocal === 1 ? '' : 's'} en tu cuenta para verlo{pendingLocal === 1 ? '' : 's'} desde cualquier dispositivo.
+            </p>
+            <Button
+              variant="primary"
+              disabled={uploading}
+              onClick={async () => {
+                setUploading(true);
+                try {
+                  const r = await uploadLocalProjects(accountAdapter());
+                  toast.success(`${r.uploaded} proyecto${r.uploaded === 1 ? '' : 's'} guardado${r.uploaded === 1 ? '' : 's'} en tu cuenta`);
+                  refresh();
+                } catch (e) {
+                  toast.error(`No se pudo guardar en tu cuenta: ${e instanceof Error ? e.message : String(e)}`);
+                } finally {
+                  setUploading(false);
+                }
+              }}
+            >
+              {uploading ? 'Guardando…' : 'Guardar en mi cuenta'}
+            </Button>
+          </div>
+        )}
 
         <section className="mt-8">
           <h2 className="mb-3 text-[12px] font-semibold uppercase tracking-wider text-slate-500">{username ? `Proyectos de ${username}` : email ? 'Mis proyectos en la nube' : 'Mis proyectos'}</h2>

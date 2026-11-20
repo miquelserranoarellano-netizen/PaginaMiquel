@@ -44,13 +44,19 @@ guarda los proyectos en tu propio equipo.
 - Minimapa con la posición, la estancia actual y teletransporte con un clic.
 
 ### Biblioteca
-95 objetos paramétricos en 16 categorías (sofás, mesas, sillas, camas, armarios,
+97 objetos paramétricos en 16 categorías (sofás, mesas, sillas, camas, armarios,
 escritorios, televisores, electrodomésticos, cocina, sanitarios, duchas y bañeras,
 lámparas, decoración, climatización, exterior y estructura —escaleras, pilares y
 barandillas—) con miniaturas 3D. Se arrastran al plano o al 3D,
 se apoyan solos contra las paredes y se pueden mover, girar, redimensionar con
 medidas exactas y cambiar de material y color pieza a pieza. También se pueden
 **importar modelos GLB/GLTF** propios, que se guardan dentro del proyecto.
+
+**Armarios empotrados.** *Armario empotrado* (puertas abatibles) y *Armario
+empotrado corredero*: van de suelo a techo (al colocarlos su alto se ajusta al
+techo de la estancia; *Ajustar al techo* lo recalcula), con marco tapajuntas,
+zócalo, altillo opcional, puerta con espejo y número de puertas automático según
+el ancho (o el que elijas).
 
 **Amueblar estancia.** Selecciona una estancia con tipo (dormitorio, salón,
 cocina, baño, despacho, garaje, pasillo, lavadero, terraza o jardín) y pulsa
@@ -119,8 +125,9 @@ exportados se pueden abrir con doble clic.
 
 ### Cuentas de usuario (web)
 
-En la web publicada en Cloudflare, el botón **Iniciar sesión** de la pantalla de
-proyectos permite **crear una cuenta con usuario y contraseña** y entrar con ella
+En la web publicada en Cloudflare, lo primero que aparece es **Iniciar sesión**
+(o *Crear cuenta* la primera vez; también se puede seguir sin cuenta). Permite
+**crear una cuenta con usuario y contraseña** y entrar con ella
 desde cualquier dispositivo (móvil, tablet, otro ordenador) para ver y seguir
 editando tus casas. Con la sesión iniciada todo se guarda automáticamente en tu
 cuenta; *Subir a mi cuenta* copia los proyectos que ya tenías en ese dispositivo.

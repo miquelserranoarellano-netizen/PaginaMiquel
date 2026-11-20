@@ -4,6 +4,7 @@ import { useEditorStore } from '@/store/editorStore';
 import { projectApi } from '@/store/projectStore';
 import { getCatalogItem } from './catalog';
 import { createFurniture } from './factory';
+import { fitFullHeight } from './ceiling';
 
 /** Punto de inserción razonable: estancia seleccionada, centro de la vista 2D o de la planta. */
 export function insertionPoint(): Vec2 {
@@ -23,6 +24,7 @@ export function addFurnitureAtViewCenter(catalogId: string, at?: Vec2): string |
   const f = createFurniture(ed.activeLevelId, item, at ?? insertionPoint());
   projectApi.apply((d) => {
     d.furniture[f.id] = f;
+    fitFullHeight(d, d.furniture[f.id]);
   });
   ed.select([{ kind: 'furniture', id: f.id }]);
   return f.id;

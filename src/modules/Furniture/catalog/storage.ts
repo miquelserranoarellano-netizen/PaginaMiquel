@@ -1,10 +1,46 @@
 /** Armarios y estanterías. */
 import type { CatalogItem } from '../types';
-import { BOOKS, CUBE, CUBE_T, LACQ, METAL, WOOD, cubeShelf, cubeSpan, drawers, legs, shelving, slot, wallShelves, wardrobe } from './parts';
+import { BOOKS, CUBE, CUBE_T, LACQ, METAL, WOOD, builtInWardrobe, cubeShelf, cubeSpan, drawers, legs, shelving, slot, wallShelves, wardrobe } from './parts';
 import type { V3 } from './parts';
-import { pint, pnum } from '../params';
+import { pbool, pint, pnum } from '../params';
+import type { ParamDef, ParamValues } from '../types';
+
+const BUILT_IN_PARAMS = (sliding: boolean): ParamDef[] => [
+  { key: 'doors', label: 'Puertas', kind: 'int', default: 0, min: 0, max: 12, hint: '0 = automático según el ancho' },
+  { key: 'sliding', label: 'Correderas', kind: 'bool', default: sliding },
+  { key: 'altillo', label: 'Con altillo', kind: 'bool', default: true, hint: 'Puertas pequeñas arriba, hasta el techo' },
+  { key: 'frame', label: 'Marco tapajuntas', kind: 'bool', default: true },
+  { key: 'mirror', label: 'Puerta con espejo', kind: 'bool', default: false },
+];
+const builtIn = (w: number, d: number, h: number, p: ParamValues, sliding: boolean) =>
+  builtInWardrobe(w, d, h, { doors: pint(p, 'doors', 0, 0, 12), sliding: pbool(p, 'sliding', sliding), altillo: pbool(p, 'altillo', true), frame: pbool(p, 'frame', true), mirror: pbool(p, 'mirror', false) });
+const BUILT_IN_SLOTS = { primary: LACQ('#f4f3ef', 'Puertas'), frame: LACQ('#f4f3ef', 'Marco y zócalo'), secondary: METAL('#9a9a9a', 'aluminio'), mirror: slot('Espejo', 'cromo', '#dfe4e8') };
 
 export const STORAGE: CatalogItem[] = [
+  {
+    id: 'wardrobe-built-in',
+    name: 'Armario empotrado',
+    category: 'armarios',
+    w: 1.8,
+    d: 0.62,
+    h: 2.6,
+    fullHeight: true,
+    slots: BUILT_IN_SLOTS,
+    params: BUILT_IN_PARAMS(false),
+    build: (w, d, h, p) => builtIn(w, d, h, p, false),
+  },
+  {
+    id: 'wardrobe-built-in-sliding',
+    name: 'Armario empotrado corredero',
+    category: 'armarios',
+    w: 2.4,
+    d: 0.65,
+    h: 2.6,
+    fullHeight: true,
+    slots: { ...BUILT_IN_SLOTS, primary: slot('Puertas', 'madera-clara', '#d8b48a') },
+    params: BUILT_IN_PARAMS(true),
+    build: (w, d, h, p) => builtIn(w, d, h, p, true),
+  },
   { id: 'wardrobe-2', name: 'Armario 2 puertas', category: 'armarios', w: 1.0, d: 0.6, h: 2.2, slots: { primary: LACQ('#f4f4f1'), secondary: METAL() }, build: (w, d, h) => wardrobe(w, d, h, 2) },
   { id: 'wardrobe-3', name: 'Armario 3 puertas', category: 'armarios', w: 1.5, d: 0.6, h: 2.4, slots: { primary: WOOD('#d8b48a', 'madera-clara'), secondary: METAL() }, build: (w, d, h) => wardrobe(w, d, h, 3) },
   {

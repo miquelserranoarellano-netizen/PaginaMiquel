@@ -6,7 +6,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { Eye, EyeOff, LogOut, UploadCloud, UserRound, X } from 'lucide-react';
 import { Button } from '@/modules/UI/controls';
 import { toast } from '@/modules/UI/toast';
-import { accountAdapter, accountLogin, accountLogout, useAccount } from './account';
+import { accountAdapter, accountLogin, accountLogout, isUnknownUser, useAccount } from './account';
 import { countLocalProjects, uploadLocalProjects } from './migrate';
 
 const input = 'h-11 w-full rounded-lg border border-slate-200 px-3 text-[15px] outline-none focus:border-accent-500 focus:ring-2 focus:ring-accent-100';
@@ -47,10 +47,12 @@ function LoginForm() {
       toast.success(create ? 'Cuenta creada: tus proyectos se guardan en ella' : 'Sesión iniciada');
     } catch (e) {
       setErr(e instanceof Error ? e.message : String(e));
+      if (!create && isUnknownUser(e)) setUnknown(true);
     } finally {
       setBusy(false);
     }
   };
+  const [unknown, setUnknown] = useState(false);
   return (
     <form
       className="space-y-3"
@@ -73,7 +75,7 @@ function LoginForm() {
       {err && <p className="text-[12.5px] text-red-600">{err}</p>}
       <div className="flex flex-wrap items-center justify-end gap-2 pt-1">
         {signup && (
-          <Button disabled={busy} onClick={() => void go(true)}>
+          <Button variant={unknown ? 'primary' : 'default'} disabled={busy} onClick={() => void go(true)}>
             Crear cuenta
           </Button>
         )}
@@ -147,8 +149,23 @@ function SignedIn({ onChanged }: { onChanged: () => void }) {
   );
 }
 
+function Unavailable() {
+  return (
+    <div className="space-y-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-[12.5px] leading-relaxed text-amber-900">
+      <p>
+        <b>El inicio de sesión todavía no está activo en esta web.</b> Falta que Cloudflare despliegue el servidor de cuentas (la dirección <code>/api/health</code> de esta web no responde).
+      </p>
+      <p>
+        En Cloudflare → Workers → <i>paginamiquel</i> → <i>Deployments</i>, comprueba que el último despliegue de la rama esté en verde. Si la rama se publica como vista previa, ponla como rama de producción en <i>Settings → Build → Branch control</i>.
+      </p>
+      <p>Mientras tanto, tus proyectos se guardan en este navegador.</p>
+    </div>
+  );
+}
+
 export function AccountDialog({ onClose, onChanged }: { onClose: () => void; onChanged: () => void }) {
   const username = useAccount((s) => s.username);
+  const available = useAccount((s) => s.available);
   return (
     <div
       className="fixed inset-0 z-[55] flex items-end justify-center bg-slate-900/40 p-4 backdrop-blur-[2px] sm:items-center"
@@ -170,7 +187,7 @@ export function AccountDialog({ onClose, onChanged }: { onClose: () => void; onC
             <X size={16} />
           </button>
         </div>
-        {username ? <SignedIn onChanged={onChanged} /> : <LoginForm />}
+        {username ? <SignedIn onChanged={onChanged} /> : available === false ? <Unavailable /> : available === null ? <p className="text-[13px] text-slate-500">Comprobando el servidor de cuentas…</p> : <LoginForm />}
       </div>
     </div>
   );

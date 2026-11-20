@@ -12,14 +12,14 @@ export function SaveIndicator() {
   const web = useAccount((s) => !!s.username);
   const account = useStorageLocation((s) => s.local === 'claude') || web;
   const map = {
-    saved: { icon: cloud || account ? <Cloud size={13} /> : <Check size={13} />, text: cloud ? 'Guardado en la nube' : account ? 'Guardado en tu cuenta' : 'Guardado', cls: 'text-accent-700' },
+    saved: { icon: cloud || account ? <Cloud size={13} /> : <Check size={13} />, text: 'Guardado', cls: 'text-accent-700' },
     dirty: { icon: <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />, text: 'Sin guardar', cls: 'text-slate-500' },
     saving: { icon: <Loader2 size={13} className="animate-spin" />, text: 'Guardando…', cls: 'text-slate-500' },
     error: { icon: <AlertCircle size={13} />, text: 'Error al guardar', cls: 'text-red-600' },
     idle: { icon: null, text: '', cls: '' },
   }[status];
   return (
-    <span className={`hidden shrink-0 items-center gap-1.5 whitespace-nowrap text-[11.5px] lg:flex ${map.cls}`} title={error ?? undefined}>
+    <span className={`hidden shrink-0 items-center gap-1.5 whitespace-nowrap text-[11.5px] lg:flex ${map.cls}`} title={error ?? (status === 'saved' ? (cloud ? 'Guardado en la nube' : account ? 'Guardado en tu cuenta' : 'Guardado en este dispositivo') : undefined)}>
       {map.icon}
       {map.text}
     </span>

@@ -216,3 +216,72 @@ export function wallShelves(w: number, d: number, p: ParamValues): Part[] {
 
 export const BOOKS = { book1: slot('Libros 1', 'plastico', '#9b4a3c'), book2: slot('Libros 2', 'plastico', '#3d5a73'), book3: slot('Libros 3', 'plastico', '#d8c9a3') };
 
+
+/**
+ * Armario empotrado de suelo a techo: tapajuntas (marco), zócalo, puertas
+ * abatibles o correderas y altillo opcional. `doors` = 0 calcula las puertas
+ * según el ancho (abatibles de ~50 cm, correderas de ~90 cm).
+ */
+export function builtInWardrobe(w: number, d: number, h: number, o: { doors: number; sliding: boolean; altillo: boolean; frame: boolean; mirror: boolean }): Part[] {
+  const fw = o.frame ? Math.min(0.05, w * 0.05) : 0;
+  const plinth = 0.07;
+  const zf = d / 2;
+  const x0 = -w / 2 + fw;
+  const areaW = w - 2 * fw;
+  const y0 = plinth;
+  const y1 = h - fw;
+  const altillo = o.altillo && h >= 2.05;
+  const ya = altillo ? y1 - Math.min(0.6, Math.max(0.35, h * 0.18)) : y1;
+  const parts: Part[] = [
+    // Hueco / cuerpo (queda detrás del frente)
+    B(0, 0, -0.03, w, h, d - 0.06, 'primary'),
+    B(0, 0, zf - 0.035, areaW, plinth, 0.02, 'frame'),
+  ];
+  if (o.frame) {
+    parts.push(B(-w / 2 + fw / 2, 0, zf - 0.01, fw, h, 0.02, 'frame'), B(w / 2 - fw / 2, 0, zf - 0.01, fw, h, 0.02, 'frame'), B(0, h - fw, zf - 0.01, areaW, fw, 0.02, 'frame'));
+  }
+  if (altillo) parts.push(B(0, ya - 0.012, zf - 0.03, areaW, 0.024, 0.03, 'frame'));
+  const mainTop = altillo ? ya - 0.014 : y1;
+  if (o.sliding) {
+    const n = o.doors > 0 ? Math.min(6, o.doors) : Math.max(2, Math.min(4, Math.round(areaW / 0.9)));
+    const pw = areaW / n;
+    const overlap = 0.03;
+    for (let i = 0; i < n; i++) {
+      const x = x0 + pw * (i + 0.5);
+      const z = i % 2 === 0 ? zf - 0.016 : zf - 0.046;
+      const mirror = o.mirror && n >= 2 && i === Math.floor((n - 1) / 2);
+      parts.push(B(x, y0 + 0.004, z, pw + (i > 0 && i < n - 1 ? overlap * 2 : overlap), mainTop - y0 - 0.008, 0.022, mirror ? 'mirror' : 'primary'));
+      // Perfil vertical para tirar (en el canto exterior de cada hoja)
+      const edge = i < n / 2 ? x - pw / 2 + 0.03 : x + pw / 2 - 0.03;
+      parts.push(B(edge, y0 + 0.004, z + 0.013, 0.012, mainTop - y0 - 0.008, 0.006, 'secondary'));
+    }
+    // Guías superior e inferior
+    parts.push(B(0, mainTop - 0.004, zf - 0.03, areaW, 0.012, 0.06, 'secondary'), B(0, y0 - 0.006, zf - 0.03, areaW, 0.01, 0.06, 'secondary'));
+  } else {
+    const n = o.doors > 0 ? Math.min(12, o.doors) : Math.max(1, Math.round(areaW / 0.5));
+    const dw = areaW / n;
+    for (let i = 0; i < n; i++) {
+      const x = x0 + dw * (i + 0.5);
+      const mirror = o.mirror && i === n - 1;
+      parts.push(B(x, y0 + 0.003, zf - 0.012, dw - 0.004, mainTop - y0 - 0.006, 0.022, mirror ? 'mirror' : 'primary'));
+      // Tiradores junto al canto que abre (por parejas)
+      const right = n === 1 ? true : i % 2 === 0 && i < n - 1;
+      const hx = right ? x + dw / 2 - 0.05 : x - dw / 2 + 0.05;
+      parts.push(B(hx, Math.min(1.25, mainTop - 0.4) - 0.3, zf + 0.012, 0.015, 0.3, 0.02, 'secondary'));
+      if (altillo) {
+        parts.push(B(x, ya + 0.014, zf - 0.012, dw - 0.004, y1 - ya - 0.018, 0.022, 'primary'));
+        parts.push(B(hx, ya + 0.05, zf + 0.012, 0.015, 0.12, 0.02, 'secondary'));
+      }
+    }
+  }
+  if (o.sliding && altillo) {
+    const n = Math.max(1, Math.round(areaW / 0.6));
+    const dw = areaW / n;
+    for (let i = 0; i < n; i++) {
+      const x = x0 + dw * (i + 0.5);
+      parts.push(B(x, ya + 0.014, zf - 0.012, dw - 0.004, y1 - ya - 0.018, 0.022, 'primary'));
+      parts.push(B(x, ya + 0.045, zf + 0.012, Math.min(0.16, dw * 0.4), 0.015, 0.02, 'secondary'));
+    }
+  }
+  return parts;
+}

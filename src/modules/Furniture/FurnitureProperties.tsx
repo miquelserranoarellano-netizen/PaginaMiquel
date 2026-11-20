@@ -10,6 +10,7 @@ import { useEditorStore } from '@/store/editorStore';
 import { projectApi } from '@/store/projectStore';
 import { CATEGORY_LABELS } from './types';
 import { getCatalogItem } from './catalog';
+import { fitFullHeight } from './ceiling';
 import { FurnitureConfig, FurnitureFit, derivedKeys } from './FurnitureFit';
 import { useProjectStore } from '@/store/projectStore';
 
@@ -57,6 +58,11 @@ export function FurnitureProperties({ item }: { item: FurnitureItem }) {
         <Field label="Alto" hint={derived.has('h') ? auto : undefined}>
           <NumberField value={item.height} min={S.min} max={S.max} unit="m" length disabled={derived.has('h')} title={derived.has('h') ? auto : undefined} onChange={(v) => set((f) => (f.height = v))} />
         </Field>
+        {cat?.fullHeight && (
+          <button type="button" className="text-[11.5px] text-accent-700 hover:underline" onClick={() => projectApi.apply((d) => void fitFullHeight(d, d.furniture[id], true))}>
+            Ajustar al techo (de suelo a techo)
+          </button>
+        )}
         <Field label="Desde el suelo" hint="Altura a la que está la base del objeto (0 = apoyado en el suelo)">
           <NumberField value={item.elevation} min={0} max={20} step={0.05} unit="m" length onChange={(v) => set((f) => (f.elevation = v))} />
         </Field>

@@ -5,6 +5,7 @@
  * Ratón: rueda = zoom · botón central, botón derecho arrastrando o Espacio+arrastre = desplazar.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { fitFullHeight } from '@/modules/Furniture/ceiling';
 import { useShallow } from 'zustand/react/shallow';
 import type { Vec2 } from '@/core/geometry';
 import { levelBBox, sortedLevels } from '@/modules/FloorPlan/queries';
@@ -262,6 +263,7 @@ export function PlanCanvas() {
     const f = createFurniture(levelId, item, snapped?.position ?? world, snapped?.rotation ?? 0);
     projectApi.apply((d) => {
       d.furniture[f.id] = f;
+      fitFullHeight(d, d.furniture[f.id]);
     });
     useEditorStore.getState().setTool('select');
     useEditorStore.getState().select([{ kind: 'furniture', id: f.id }]);

@@ -6,12 +6,13 @@
  *  - Todos: si cabe en la pared, si tapa puertas o ventanas, si llega al
  *    techo y si choca con otros muebles.
  */
-import { type Vec2, add, dot, orientedRect, pointInPolygon, polygonArea, projectOnSegment, rotate, sub, length } from '@/core/geometry';
+import { type Vec2, add, dot, orientedRect, pointInPolygon, projectOnSegment, rotate, sub, length } from '@/core/geometry';
 import { degToRad, formatCm, formatLength, formatNumber } from '@/core/units';
 import type { FurnitureItem, ProjectDoc } from '@/modules/FloorPlan/types';
 import { getOpeningDef } from '@/modules/DoorsAndWindows/catalog';
 import { wallFrame } from '@/modules/Walls/geometry';
 import { getCatalogItem } from './catalog';
+import { ceilingHeightAt, roomAt } from './ceiling';
 import { SHELF_T, TV_BEZEL, TV_STAND_H, pint, pnum, resolveParams, shelfLayout, suggestedInches, tvScreen } from './params';
 
 export type FindingLevel = 'ok' | 'warn' | 'info';
@@ -54,12 +55,9 @@ function convexOverlap(a: Vec2[], b: Vec2[]): boolean {
 }
 
 function ceilingAt(doc: ProjectDoc, f: FurnitureItem): number {
-  const level = doc.levels[f.levelId];
-  const room = Object.values(doc.rooms)
-    .filter((r) => r.levelId === f.levelId && pointInPolygon(f.position, r.points))
-    .sort((a, b) => polygonArea(a.points) - polygonArea(b.points))[0];
+  const room = roomAt(doc, f.levelId, f.position);
   if (room && !room.hasCeiling) return Infinity;
-  return room?.ceilingHeight ?? level?.height ?? 2.7;
+  return ceilingHeightAt(doc, f.levelId, f.position);
 }
 
 /** Muro en el que se apoya la trasera del mueble (si lo hay). */

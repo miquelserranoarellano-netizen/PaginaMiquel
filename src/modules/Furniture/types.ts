@@ -88,6 +88,8 @@ export interface CatalogItem {
   fromSize?: (size: Size3, p: ParamValues) => ParamValues;
   /** Fuente de luz (lámparas). y relativo a la altura total (0..1). */
   light?: { y: number; intensity: number; color: string; distance: number };
+  /** Va de suelo a techo (armarios empotrados): al colocarlo su alto se ajusta al techo. */
+  fullHeight?: boolean;
   /** Bloquea el paso en el recorrido (por defecto si mide más de 40 cm). */
   blocks?: boolean;
 }

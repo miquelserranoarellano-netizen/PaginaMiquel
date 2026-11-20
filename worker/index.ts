@@ -134,27 +134,34 @@ async function register(req: Request, env: Env) {
   const count = (await env.DB.prepare('SELECT COUNT(*) AS n FROM users').first<{ n: number }>())?.n ?? 0;
   if (count >= Number(env.MAX_USERS ?? 20)) throw new HttpError(403, 'No se admiten más cuentas en esta instalación');
   if (await env.DB.prepare('SELECT 1 FROM users WHERE id = ?').bind(id).first()) throw new HttpError(409, 'Ese usuario ya existe: entra con tu contraseña');
-  await env.DB.prepare('INSERT INTO users (id, username, password, created_at) VALUES (?, ?, ?, ?)').bind(id, username, await hashPassword(password), Date.now()).run();
+  await env.DB.batch([
+    env.DB.prepare('INSERT INTO users (id, username, password, created_at) VALUES (?, ?, ?, ?)').bind(id, username, await hashPassword(password), Date.now()),
+    env.DB.prepare('DELETE FROM login_attempts WHERE user_id = ?').bind(id),
+  ]);
   return json({ token: await newSession(env, id), username });
 }
 
 async function login(req: Request, env: Env) {
-  const { password, id } = credentials(await readJson(req));
+  const { username, password, id } = credentials(await readJson(req));
   const now = Date.now();
+  const user = await env.DB.prepare('SELECT id, username, password FROM users WHERE id = ?').bind(id).first<{ id: string; username: string; password: string }>();
+  if (!user) {
+    const signup = env.ALLOW_SIGNUP !== 'false';
+    throw new HttpError(404, `No existe ninguna cuenta con el usuario «${username}».${signup ? ' Si es la primera vez, créala con «Crear cuenta».' : ''}`);
+  }
   const attempt = await env.DB.prepare('SELECT fails, locked_until FROM login_attempts WHERE user_id = ?').bind(id).first<{ fails: number; locked_until: number }>();
   if (attempt && attempt.locked_until > now) {
     const min = Math.ceil((attempt.locked_until - now) / 60_000);
     throw new HttpError(429, `Demasiados intentos. Espera ${min} min y vuelve a probar`);
   }
-  const user = await env.DB.prepare('SELECT id, username, password FROM users WHERE id = ?').bind(id).first<{ id: string; username: string; password: string }>();
-  const ok = user ? await verifyPassword(password, user.password) : (await pbkdf2(password, new Uint8Array(16), ITERATIONS), false);
-  if (!ok || !user) {
+  const ok = await verifyPassword(password, user.password);
+  if (!ok) {
     const fails = (attempt?.fails ?? 0) + 1;
     const lock = fails >= 5 ? now + Math.min(60, 2 ** (fails - 5) * 5) * 60_000 : 0;
     await env.DB.prepare('INSERT INTO login_attempts (user_id, fails, locked_until) VALUES (?, ?, ?) ON CONFLICT(user_id) DO UPDATE SET fails = excluded.fails, locked_until = excluded.locked_until')
       .bind(id, fails, lock)
       .run();
-    throw new HttpError(401, 'Usuario o contraseña incorrectos');
+    throw new HttpError(401, fails >= 5 ? 'Contraseña incorrecta. Por seguridad, espera unos minutos antes de volver a probar' : 'Contraseña incorrecta (distingue mayúsculas y minúsculas)');
   }
   await env.DB.prepare('DELETE FROM login_attempts WHERE user_id = ?').bind(id).run();
   return json({ token: await newSession(env, user.id), username: user.username });

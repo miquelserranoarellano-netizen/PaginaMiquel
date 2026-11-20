@@ -1,4 +1,5 @@
 import { useReducer, useRef } from 'react';
+import { fitFullHeight } from '@/modules/Furniture/ceiling';
 import { type Vec2, roundTo } from '@/core/geometry';
 import { getCatalogItem } from '@/modules/Furniture/catalog';
 import { createFurniture } from '@/modules/Furniture/factory';
@@ -49,6 +50,7 @@ export function FurnitureTool() {
       const f = createFurniture(levelId, item, r.pos, r.rotation);
       projectApi.apply((d) => {
         d.furniture[f.id] = f;
+        fitFullHeight(d, d.furniture[f.id]);
       });
       const ed = useEditorStore.getState();
       if (!p.shiftKey) ed.setTool('select');

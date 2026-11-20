@@ -12,15 +12,39 @@ import type { StorageAdapter } from './storage';
 
 const TOKEN_KEY = 'homedesign.account.v1';
 
+const GUEST_KEY = 'homedesign.guest';
+
 interface AccountState {
   /** null mientras se comprueba si esta web tiene cuentas. */
   available: boolean | null;
   signup: boolean;
   username: string | null;
+  /** Ha elegido seguir sin cuenta en esta visita. */
+  guest: boolean;
   set: (p: Partial<Omit<AccountState, 'set'>>) => void;
 }
 
-export const useAccount = create<AccountState>()((set) => ({ available: null, signup: true, username: null, set: (p) => set(p) }));
+const readGuest = (): boolean => {
+  try {
+    return sessionStorage.getItem(GUEST_KEY) === '1';
+  } catch {
+    return false;
+  }
+};
+
+export const useAccount = create<AccountState>()((set) => ({ available: null, signup: true, username: null, guest: readGuest(), set: (p) => set(p) }));
+
+/** true en la web publicada (no dentro de Claude ni en la app de escritorio). */
+export const isWeb = (): boolean => typeof location !== 'undefined' && /^https?:$/.test(location.protocol) && !inClaude() && !window.homeDesign;
+
+export function continueAsGuest(): void {
+  try {
+    sessionStorage.setItem(GUEST_KEY, '1');
+  } catch {
+    /* sin almacenamiento */
+  }
+  useAccount.getState().set({ guest: true });
+}
 
 let token: string | null = null;
 try {
@@ -59,15 +83,26 @@ async function api<T>(path: string, init: RequestInit = {}, timeoutMs = 20000): 
     saveToken(null);
     useAccount.getState().set({ username: null });
   }
-  if (!res.ok || !body) throw new Error(body?.error ?? `Error ${res.status}`);
+  if (!res.ok || !body) throw new ApiError(body?.error ?? `Error ${res.status}`, res.status);
   return body;
 }
+
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    public status: number,
+  ) {
+    super(message);
+  }
+}
+
+/** true si el error es «ese usuario no existe» (para ofrecer crear la cuenta). */
+export const isUnknownUser = (e: unknown): boolean => e instanceof ApiError && e.status === 404;
 
 /** Comprueba si la web tiene cuentas y recupera la sesión guardada. */
 export async function initAccount(): Promise<void> {
   const st = useAccount.getState();
-  const web = typeof location !== 'undefined' && /^https?:$/.test(location.protocol) && !inClaude() && !window.homeDesign;
-  if (!web) return st.set({ available: false });
+  if (!isWeb()) return st.set({ available: false });
   try {
     const h = await api<{ accounts?: boolean; signup?: boolean }>('/api/health', { method: 'GET' }, 5000);
     if (!h.accounts) return st.set({ available: false });
@@ -94,7 +129,12 @@ export async function accountLogin(username: string, password: string, create = 
 export async function accountLogout(): Promise<void> {
   await api('/api/logout', { method: 'POST', body: '{}' }).catch(() => undefined);
   saveToken(null);
-  useAccount.getState().set({ username: null });
+  try {
+    sessionStorage.removeItem(GUEST_KEY);
+  } catch {
+    /* sin almacenamiento */
+  }
+  useAccount.getState().set({ username: null, guest: false });
 }
 
 export const accountActive = (): boolean => !!useAccount.getState().username;
