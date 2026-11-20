@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { Armchair, Building2, Eye, Home, Layers, Scissors, View } from 'lucide-react';
 import { useEditorStore } from '@/store/editorStore';
 import { cx } from '@/modules/UI/controls';
+import { PresetButtons } from '@/modules/Lighting/LightingPanel';
 
 function TB({ active, onClick, title, children }: { active?: boolean; onClick: () => void; title: string; children: ReactNode }) {
   return (
@@ -46,6 +47,9 @@ export function ViewerToolbar() {
         <TB title="Mostrar muebles" active={view3d.showFurniture} onClick={() => setView3d({ showFurniture: !view3d.showFurniture })}>
           <Armchair size={14} />
         </TB>
+      </div>
+      <div className="absolute right-3 top-[58px] w-52 rounded-lg border border-slate-200 bg-white/95 p-1 shadow-sm backdrop-blur">
+        <PresetButtons compact />
       </div>
       <div className="pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-slate-900/75 px-3.5 py-1.5 text-[11.5px] text-white shadow">
         Arrastrar: girar · Clic derecho: desplazar · Rueda: zoom · Clic: seleccionar · Arrastra un mueble seleccionado para moverlo

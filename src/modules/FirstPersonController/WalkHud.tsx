@@ -5,6 +5,7 @@ import { useProjectStore } from '@/store/projectStore';
 import { cx } from '@/modules/UI/controls';
 import { Minimap } from './Minimap';
 import { useWalkStore } from './walkStore';
+import { PRESETS, applyPreset } from '@/modules/Lighting/LightingPanel';
 
 function Key({ children }: { children: string }) {
   return <kbd className="inline-flex min-w-[22px] items-center justify-center rounded border border-white/30 bg-white/10 px-1.5 py-0.5 text-[11px] font-semibold">{children}</kbd>;
@@ -85,6 +86,12 @@ export function WalkHud() {
             ))}
           </>
         )}
+        <div className="h-5 w-px bg-slate-200" />
+        {PRESETS.map(({ id, label, icon: Icon }) => (
+          <button key={id} type="button" title={label} onClick={() => applyPreset(id)} className={cx('flex h-8 w-8 items-center justify-center rounded-lg', doc.lighting.preset === id ? 'bg-accent-50 text-accent-800' : 'text-slate-500 hover:bg-slate-100')}>
+            <Icon size={15} />
+          </button>
+        ))}
         <div className="h-5 w-px bg-slate-200" />
         <button type="button" onClick={() => setView('3d')} className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[12.5px] text-slate-600 hover:bg-slate-100">
           <Box size={14} /> Salir al modelo 3D
