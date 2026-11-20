@@ -67,6 +67,21 @@ export interface Store {
 
 // ── Supabase ───────────────────────────────────────────────────────────────
 
+/**
+ * URL de la API del proyecto. Acepta también la dirección del panel
+ * (supabase.com/dashboard/project/<ref>) o solo la referencia del proyecto.
+ */
+export function supabaseApiUrl(raw: string): string {
+  const u = raw.trim();
+  const dash = /supabase\.com\/dashboard\/project\/([a-z0-9]{10,40})/i.exec(u);
+  if (dash) return `https://${dash[1].toLowerCase()}.supabase.co`;
+  if (/^[a-z0-9]{10,40}$/i.test(u)) return `https://${u.toLowerCase()}.supabase.co`;
+  return u
+    .replace(/\/+$/, '')
+    .replace(/\/rest\/v1$/, '')
+    .replace(/^(?!https?:\/\/)/, 'https://');
+}
+
 export class SupabaseStore implements Store {
   readonly kind = 'supabase' as const;
   private base: string;
@@ -74,7 +89,7 @@ export class SupabaseStore implements Store {
     url: string,
     private key: string,
   ) {
-    this.base = `${url.trim().replace(/\/+$/, '').replace(/^(?!https?:\/\/)/, 'https://')}/rest/v1/`;
+    this.base = `${supabaseApiUrl(url)}/rest/v1/`;
   }
 
   private async req<T>(path: string, init: RequestInit & { prefer?: string } = {}): Promise<{ data: T; res: Response }> {
