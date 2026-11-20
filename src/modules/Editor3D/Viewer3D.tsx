@@ -16,6 +16,7 @@ import { Ground } from './Ground';
 import { CameraRig } from './CameraRig';
 import { DragBridge } from './DragBridge';
 import { ViewerToolbar } from './ViewerToolbar';
+import { PostFX } from './PostFX';
 import { sceneBounds } from './sceneBounds';
 import { getViewer } from './viewerRef';
 
@@ -29,6 +30,10 @@ export default function Viewer3D() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const bounds = useMemo(() => sceneBounds(doc), [walls, rooms, levels]);
   const mode = view === 'walk' ? 'walk' : '3d';
+  const view3d = useEditorStore((s) => s.view3d);
+  // En el recorrido siempre se ve el exterior real (cielo y jardín a través de las ventanas).
+  const style = mode === 'walk' ? 'exterior' : view3d.style;
+  const hq = view3d.quality === 'alta';
 
   const onDrop = (e: React.DragEvent) => {
     const id = e.dataTransfer.getData(DRAG_MIME);
@@ -48,7 +53,7 @@ export default function Viewer3D() {
 
   return (
     <div
-      className="relative h-full w-full bg-slate-200"
+      className="relative h-full w-full bg-[#4a4c50]"
       onDragOver={(e) => {
         if (e.dataTransfer.types.includes(DRAG_MIME)) {
           e.preventDefault();
@@ -70,11 +75,12 @@ export default function Viewer3D() {
         }}
       >
         <Suspense fallback={null}>
-          <LightRig lighting={doc.lighting} bounds={bounds} />
-          <Ground settings={doc.settings} bounds={bounds} />
+          <LightRig lighting={doc.lighting} bounds={bounds} style={style} />
+          <Ground settings={doc.settings} bounds={bounds} style={style} />
           <HouseModel mode={mode} />
         </Suspense>
-        {mode === '3d' ? <CameraRig key="orbit" bounds={bounds} /> : <WalkController key="walk" />}
+        {mode === '3d' ? <CameraRig key="orbit" bounds={bounds} studio={style === 'estudio'} /> : <WalkController key="walk" />}
+        {hq && <PostFX studio={style === 'estudio'} walk={mode === 'walk'} />}
         <DragBridge />
       </Canvas>
       {mode === '3d' ? <ViewerToolbar /> : <WalkHud />}

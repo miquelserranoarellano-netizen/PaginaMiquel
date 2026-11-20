@@ -1,6 +1,6 @@
 /**
  * Geometría 3D de un muro a partir de sus tramos (ver geometry.ts).
- * Grupos de material: 0 = cara A, 1 = cara B, 2 = cantos (testas, jambas, coronación).
+ * Grupos de material: 0 = cara A, 1 = cara B, 2 = testas y jambas, 3 = coronación y base.
  * UV en metros: u a lo largo del muro, v en altura.
  */
 import { BufferGeometry, Float32BufferAttribute } from 'three';
@@ -70,6 +70,7 @@ export function buildWallGeometry(pieces: readonly WallPiece[], f: WallFrame, el
   const A = new GroupBuffer();
   const B = new GroupBuffer();
   const C = new GroupBuffer();
+  const T = new GroupBuffer();
   const n: V3 = [f.normal.x, 0, f.normal.y];
   const nB: V3 = [-f.normal.x, 0, -f.normal.y];
   const d: V3 = [f.dir.x, 0, f.dir.y];
@@ -96,8 +97,8 @@ export function buildWallGeometry(pieces: readonly WallPiece[], f: WallFrame, el
     C.quad([P(p1, y0), P(p2, y0), P(p2, y1), P(p1, y1)], [[across(p1), y0], [across(p2), y0], [across(p2), y1], [across(p1), y1]], d);
     // Coronación y base
     const uvTop = (p: Vec2): [number, number] => [along(p), across(p)];
-    C.quad([P(p0, y1), P(p1, y1), P(p2, y1), P(p3, y1)], [uvTop(p0), uvTop(p1), uvTop(p2), uvTop(p3)], [0, 1, 0]);
-    C.quad([P(p0, y0), P(p1, y0), P(p2, y0), P(p3, y0)], [uvTop(p0), uvTop(p1), uvTop(p2), uvTop(p3)], [0, -1, 0]);
+    T.quad([P(p0, y1), P(p1, y1), P(p2, y1), P(p3, y1)], [uvTop(p0), uvTop(p1), uvTop(p2), uvTop(p3)], [0, 1, 0]);
+    T.quad([P(p0, y0), P(p1, y0), P(p2, y0), P(p3, y0)], [uvTop(p0), uvTop(p1), uvTop(p2), uvTop(p3)], [0, -1, 0]);
   }
-  return mergeGroups([A, B, C]);
+  return mergeGroups([A, B, C, T]);
 }

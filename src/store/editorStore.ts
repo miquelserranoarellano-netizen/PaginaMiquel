@@ -18,7 +18,13 @@ export interface Viewport2D {
   zoom: number;
 }
 
+export type RenderStyle = 'estudio' | 'exterior';
+
 export interface View3DOptions {
+  /** Estudio: fondo gris de presentación (maqueta). Exterior: cielo y terreno. */
+  style: RenderStyle;
+  /** Alta: oclusión ambiental y antialiasing de postproceso. */
+  quality: 'alta' | 'normal';
   showCeilings: boolean;
   /** Muros cortados a media altura (vista de maqueta). */
   cutaway: boolean;
@@ -121,7 +127,7 @@ export const useEditorStore = create<EditorState>()((set) => ({
   snapToGrid: prefs.snapToGrid ?? true,
   snapToObjects: prefs.snapToObjects ?? true,
   plan: { grid: true, wallLengths: true, roomLabels: true, furniture: true, dimensions: true, lowerLevel: true, ...prefs.plan },
-  view3d: { showCeilings: false, cutaway: false, upToActiveLevel: true, showFurniture: true, ...prefs.view3d },
+  view3d: { style: 'estudio', quality: 'alta', showCeilings: false, cutaway: false, upToActiveLevel: true, showFurniture: true, ...prefs.view3d },
   viewport: { cx: 5, cy: 4, zoom: 60 },
   cursor: null,
   liveMeasure: null,

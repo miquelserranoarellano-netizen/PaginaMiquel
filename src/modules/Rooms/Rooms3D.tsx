@@ -4,6 +4,9 @@ import type { Level, Room } from '@/modules/FloorPlan/types';
 import { getMaterial } from '@/modules/Materials/materials3d';
 import type { PickHandlers } from '@/modules/Walls/Walls3D';
 import { buildSlabGeometry } from './slab';
+import { insetPolygon } from '@/core/geometry';
+
+const POOL_RIM = { materialId: 'marmol-blanco', color: '#ece9e3' };
 
 const CEILING_THICKNESS = 0.06;
 
@@ -11,7 +14,10 @@ const RoomSlabs = memo(function RoomSlabs({ room, level, showCeiling, selected, 
   // Suelo: en planta baja casi sin espesor (sobre el terreno); en plantas altas, forjado completo.
   const floorThickness = level.order === 0 && level.elevation <= 0.01 ? 0.04 : level.slabThickness;
   const isWater = room.floor.materialId === 'agua';
-  const floorTop = level.elevation + (isWater ? 0.012 : 0.002);
+  const floorTop = level.elevation + (isWater ? -0.02 : 0.002);
+  // Piscina: lámina de agua ligeramente hundida dentro de un borde de piedra.
+  const rimGeo = useMemo(() => (isWater ? buildSlabGeometry(insetPolygon(room.points, room.points.map(() => -0.35)), level.elevation + 0.06, 0.1, [room.points]) : null), [isWater, room.points, level.elevation]);
+  useEffect(() => () => rimGeo?.dispose(), [rimGeo]);
   const floorGeo = useMemo(() => buildSlabGeometry(room.points, floorTop, isWater ? 0.02 : floorThickness), [room.points, floorTop, floorThickness, isWater]);
   const ceilingY = level.elevation + (room.ceilingHeight ?? level.height);
   const ceilGeo = useMemo(() => (room.hasCeiling ? buildSlabGeometry(room.points, ceilingY + CEILING_THICKNESS, CEILING_THICKNESS) : null), [room.points, ceilingY, room.hasCeiling]);
@@ -29,6 +35,7 @@ const RoomSlabs = memo(function RoomSlabs({ room, level, showCeiling, selected, 
   return (
     <group userData={{ ref: { kind: 'room', id: room.id } }}>
       <mesh geometry={floorGeo} material={floorMats} receiveShadow castShadow={level.order > 0} {...pick('room', room.id)} />
+      {rimGeo && <mesh geometry={rimGeo} material={getMaterial(POOL_RIM)} castShadow receiveShadow />}
       {ceilGeo && showCeiling && <mesh geometry={ceilGeo} material={ceilMats} castShadow receiveShadow />}
       {selected && <Line points={outline} color="#2563eb" lineWidth={3} dashed dashSize={0.25} gapSize={0.12} />}
     </group>

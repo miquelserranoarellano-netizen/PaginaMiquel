@@ -168,6 +168,11 @@ trazado de muros se hace en 2D (es donde se puede dibujar con precisión).
   sustracción booleana y genera colisiones exactas para el recorrido.
 * **D6 – Plano en SVG.** El editor 2D usa SVG: líneas nítidas a cualquier zoom,
   selección precisa y exportación directa a PNG/PDF.
+* **D8 – Estilo de presentación y postprocesado.** El visor 3D ofrece un estilo
+  *Estudio* (fondo degradado, suelo que solo recibe sombras, óptica cerrada) y
+  un estilo *Entorno* (cielo y terreno). Un `EffectComposer` aplica oclusión
+  ambiental N8AO, SMAA y tone mapping ACES; se puede desactivar ("Calidad alta")
+  en equipos modestos.
 * **D7 – Escaleras.** Las plantas se apilan en 3D; en el recorrido se cambia de
   planta desde el selector (no hay subida física por escaleras).
 

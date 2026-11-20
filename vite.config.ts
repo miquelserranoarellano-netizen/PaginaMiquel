@@ -32,6 +32,8 @@ export default defineConfig(({ command }) => ({
       'three',
       '@react-three/fiber',
       '@react-three/drei',
+      '@react-three/postprocessing',
+      'postprocessing',
       'three/examples/jsm/environments/RoomEnvironment.js',
       'three/examples/jsm/geometries/RoundedBoxGeometry.js',
       'three/examples/jsm/loaders/GLTFLoader.js',

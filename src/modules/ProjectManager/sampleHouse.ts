@@ -15,7 +15,7 @@ import { createFurniture } from '@/modules/Furniture/factory';
 import type { FurnitureItem } from '@/modules/FloorPlan/types';
 
 const PAINT: SurfaceMaterial = { materialId: 'pintura', color: '#f3f1ec' };
-const RENDER: SurfaceMaterial = { materialId: 'estuco', color: '#f1ede4' };
+const RENDER: SurfaceMaterial = { materialId: 'pintura', color: '#f4f3ef' };
 
 export function createSampleHouse(): ProjectDoc {
   const doc = createEmptyProject('Casa de ejemplo');
@@ -56,7 +56,8 @@ export function createSampleHouse(): ProjectDoc {
     const mid = add(w.start, scale(f.dir, f.length / 2));
     const aOut = !pointInPolygon(add(mid, scale(f.normal, 0.4)), footprint);
     const bOut = !pointInPolygon(add(mid, scale(f.normal, -0.4)), footprint);
-    const facade = Math.abs(mid.y - 11) < 0.01 ? { materialId: 'piedra', color: '#a39c90' } : mid.x > 12.01 ? { materialId: 'hormigon-visto', color: '#b3b1ab' } : RENDER;
+    // Fachadas blancas (estilo maqueta) con un paño de piedra junto a la terraza.
+    const facade = Math.abs(mid.y - 11) < 0.01 && mid.x < 7 ? { materialId: 'piedra', color: '#b9b2a6' } : RENDER;
     if (aOut) w.sideA = { ...facade };
     if (bOut) w.sideB = { ...facade };
   }
@@ -109,13 +110,13 @@ export function createSampleHouse(): ProjectDoc {
     Object.assign(doc.rooms[id], patch);
     return id;
   };
-  room([2.5, 2], 'dormitorio', 'Dormitorio principal', { floor: { materialId: 'parquet-roble', color: '#b8875a' } });
+  room([2.5, 2], 'dormitorio', 'Dormitorio principal', { floor: { materialId: 'parquet-espiga', color: '#b38a5f' } });
   room([6.5, 2], 'bano', 'Baño');
   room([10, 2], 'dormitorio', 'Dormitorio 2', { floor: { materialId: 'parquet-gris', color: '#a39a90' } });
   room([6, 4.7], 'pasillo', 'Pasillo');
-  room([3.5, 8], 'salon', 'Salón comedor', { floor: { materialId: 'parquet-espiga', color: '#a87a4f' } });
-  room([9.5, 8], 'cocina', 'Cocina', { floor: { materialId: 'ceramica-gris', color: '#8e9092' } });
-  room([15, 3], 'garaje', 'Garaje');
+  room([3.5, 8], 'salon', 'Salón comedor', { floor: { materialId: 'parquet-roble', color: '#b98d62' } });
+  room([9.5, 8], 'cocina', 'Cocina', { floor: { materialId: 'parquet-roble', color: '#b98d62' } });
+  room([15, 3], 'garaje', 'Garaje', { floor: { materialId: 'hormigon-pulido', color: '#c9c8c4' } });
   const terrace = addPolygonRoom(doc, L, [{ x: 0, y: 11.125 }, { x: 7.2, y: 11.125 }, { x: 7.2, y: 14.2 }, { x: 0, y: 14.2 }], 'terraza', false);
   if (terrace) doc.rooms[terrace].name = 'Terraza';
   const pool = addPolygonRoom(doc, L, [{ x: 8.6, y: 12.4 }, { x: 14.6, y: 12.4 }, { x: 14.6, y: 15.4 }, { x: 8.6, y: 15.4 }], 'piscina', false);
@@ -180,6 +181,7 @@ export function createSampleHouse(): ProjectDoc {
   put('pendant', 2.4, 7.0);
   put('bookshelf', 1.2, 5.64);
   put('plant', 6.5, 10.4);
+  put('plant', 0.55, 10.45);
   put('sideboard', 5.6, 5.7);
   // Cocina
   put('fridge', 11.54, 5.8, 90);
@@ -208,12 +210,5 @@ export function createSampleHouse(): ProjectDoc {
   put('lounger', 15.8, 14.4, 270);
   put('garden-lamp', 7.6, 11.6);
   put('garden-lamp', 14.9, 11.8);
-  put('tree', -3.5, 3);
-  put('tree', 21.5, 10, 0, { width: 3.6, depth: 3.6, height: 5.5 });
-  put('tree', -2.8, 14.5, 0, { width: 2.6, depth: 2.6, height: 4.5 });
-  put('pine', 20.5, -1.5);
-  put('pine', 20.5, 1.5);
-  put('hedge', 9, 17, 0, { width: 9 });
-  put('bbq', 17.2, 9.0, 270);
   return doc;
 }

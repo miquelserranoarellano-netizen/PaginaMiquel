@@ -7,9 +7,11 @@ guarda los proyectos en tu propio equipo.
 
 ![Plano 2D](docs/capturas/plano-2d.png)
 
-| Modelo 3D | Vista maqueta (muros cortados) |
+![Modelo 3D en estilo estudio](docs/capturas/modelo-3d.png)
+
+| Vista interior | Vista maqueta (muros cortados) |
 |---|---|
-| ![Modelo 3D](docs/capturas/modelo-3d.png) | ![Maqueta](docs/capturas/maqueta-3d.png) |
+| ![Interior](docs/capturas/interior-3d.png) | ![Maqueta](docs/capturas/maqueta-3d.png) |
 | **Recorrido interior (día)** | **Recorrido interior (noche)** |
 | ![Recorrido de día](docs/capturas/recorrido.png) | ![Recorrido de noche](docs/capturas/recorrido-noche.png) |
 | **Ambiente de noche** | **Material del suelo** |
@@ -30,7 +32,9 @@ guarda los proyectos en tu propio equipo.
 
 ### Modelo 3D
 - Conversión automática y en tiempo real del plano: muros con uniones a inglete y huecos reales, suelos, techos, puertas y ventanas integradas, muebles.
-- Cámara orbital con vistas **exterior, cenital e interior**; techos ocultables, vista de **maqueta** y visualización planta a planta.
+- Dos estilos: **Estudio** (presentación de arquitectura sobre fondo gris, como una maqueta) y **Entorno** (cielo, terreno y jardín).
+- Acabado de calidad: oclusión ambiental (N8AO), sombras suaves, antialiasing SMAA y tone mapping ACES.
+- Cámara orbital con vistas **exterior, cenital e interior** (gran angular); techos ocultables, vista de **maqueta** y visualización planta a planta.
 - Selección de muros, suelos, huecos y muebles para editar alturas, grosores, materiales y colores; los muebles se pueden arrastrar sobre el suelo.
 
 ### Recorrido virtual
@@ -50,7 +54,7 @@ medidas exactas y cambiar de material y color pieza a pieza. También se pueden
 ### Materiales e iluminación
 - Suelos de parquet (lamas y espiga), mármol, cerámica, baldosa hidráulica, hormigón, moqueta, tarima, césped, grava…
 - Paredes con pintura de cualquier color, estuco, ladrillo, piedra, hormigón visto, paneles de madera y azulejo.
-- Texturas generadas por la propia aplicación (sin descargas) a escala real y teñibles.
+- Texturas generadas por la propia aplicación (sin descargas) a escala real y teñibles; la madera tiene veta real (fibras, anillos y poros) a 1024 px.
 - Ambientes **mañana, mediodía, atardecer y noche**; sol con sombras configurable (intensidad, orientación y altura), luz ambiente, exposición, luces de techo automáticas y lámparas con intensidad y color.
 
 ### Proyectos y exportación

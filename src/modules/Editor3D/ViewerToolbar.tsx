@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Armchair, Building2, Eye, Home, Layers, Scissors, View } from 'lucide-react';
+import { Armchair, Building2, Eye, Home, Layers, Scissors, Sparkles, Trees, View } from 'lucide-react';
 import { useEditorStore } from '@/store/editorStore';
 import { cx } from '@/modules/UI/controls';
 import { PresetButtons } from '@/modules/Lighting/LightingPanel';
@@ -46,6 +46,14 @@ export function ViewerToolbar() {
         </TB>
         <TB title="Mostrar muebles" active={view3d.showFurniture} onClick={() => setView3d({ showFurniture: !view3d.showFurniture })}>
           <Armchair size={14} />
+        </TB>
+      </div>
+      <div className="absolute left-3 top-[58px] flex items-center gap-0.5 rounded-lg border border-slate-200 bg-white/95 p-1 shadow-sm backdrop-blur">
+        <TB title="Presentación de estudio (fondo gris, como una maqueta)" active={view3d.style === 'estudio'} onClick={() => setView3d({ style: 'estudio' })}>
+          <Sparkles size={14} /> Estudio
+        </TB>
+        <TB title="Entorno exterior con cielo y jardín" active={view3d.style === 'exterior'} onClick={() => setView3d({ style: 'exterior' })}>
+          <Trees size={14} /> Entorno
         </TB>
       </div>
       <div className="absolute right-3 top-[58px] w-52 rounded-lg border border-slate-200 bg-white/95 p-1 shadow-sm backdrop-blur">

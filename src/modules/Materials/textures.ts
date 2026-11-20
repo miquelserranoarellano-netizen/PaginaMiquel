@@ -15,6 +15,8 @@ export interface MaterialMaps {
 }
 
 const SIZE = 512;
+/** Resolución de las texturas de madera (más detalle en suelos). */
+const WOOD_SIZE = 1024;
 type RGB = [number, number, number];
 
 // ── Utilidades ─────────────────────────────────────────────────────────────
@@ -69,10 +71,30 @@ function fbm(seed: number, basePeriod: number, octaves: number) {
   };
 }
 
+/** Ruido periódico con distinto número de celdas en X e Y (vetas alargadas). */
+function makeNoise2(seed: number, px: number, py: number) {
+  const r = rng(seed);
+  const grid = new Float32Array(px * py).map(() => r());
+  const at = (x: number, y: number) => grid[(((y % py) + py) % py) * px + (((x % px) + px) % px)];
+  return (u: number, v: number) => {
+    const x = u * px;
+    const y = v * py;
+    const xi = Math.floor(x);
+    const yi = Math.floor(y);
+    const xf = x - xi;
+    const yf = y - yi;
+    const sx = xf * xf * (3 - 2 * xf);
+    const sy = yf * yf * (3 - 2 * yf);
+    const a = at(xi, yi) + (at(xi + 1, yi) - at(xi, yi)) * sx;
+    const b = at(xi, yi + 1) + (at(xi + 1, yi + 1) - at(xi, yi + 1)) * sx;
+    return a + (b - a) * sy;
+  };
+}
+
 const clamp255 = (v: number) => (v < 0 ? 0 : v > 255 ? 255 : v);
 const shade = (c: RGB, f: number): string => `rgb(${clamp255(c[0] * f)},${clamp255(c[1] * f)},${clamp255(c[2] * f)})`;
 
-function canvas(size = SIZE) {
+function canvas(size: number = SIZE) {
   const c = document.createElement('canvas');
   c.width = c.height = size;
   return { c, g: c.getContext('2d')! };
@@ -109,92 +131,146 @@ interface Generated {
   bumpScale?: number;
 }
 
-function woodGrain(g: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, base: RGB, r: () => number, alongX = true) {
-  const tint = 0.86 + r() * 0.24;
-  g.fillStyle = shade(base, tint);
-  g.fillRect(x, y, w, h);
-  const lines = Math.round((alongX ? h : w) / 2.2);
-  for (let i = 0; i < lines; i++) {
-    g.strokeStyle = shade(base, tint * (0.78 + r() * 0.3));
-    g.globalAlpha = 0.18 + r() * 0.25;
-    g.lineWidth = 0.6 + r() * 1.4;
-    g.beginPath();
-    if (alongX) {
-      const yy = y + r() * h;
-      g.moveTo(x, yy);
-      const amp = 1 + r() * 2.5;
-      for (let k = 0; k <= 8; k++) g.lineTo(x + (w * k) / 8, yy + Math.sin(k * 0.9 + r() * 6) * amp);
-    } else {
-      const xx = x + r() * w;
-      g.moveTo(xx, y);
-      const amp = 1 + r() * 2.5;
-      for (let k = 0; k <= 8; k++) g.lineTo(xx + Math.sin(k * 0.9 + r() * 6) * amp, y + (h * k) / 8);
+/**
+ * Tira de madera con veta realista (píxel a píxel): fibras alargadas, anillos
+ * de crecimiento ondulados y poros. Se recorta para cada lama.
+ */
+const STRIP_W = 1024;
+const STRIP_H = 160;
+const stripCache = new Map<string, HTMLCanvasElement>();
+
+function woodStrip(base: RGB, seed: number): HTMLCanvasElement {
+  const key = `${base.join(',')}|${seed}`;
+  const hit = stripCache.get(key);
+  if (hit) return hit;
+  const fibers = makeNoise2(seed, 8, 140);
+  const fibers2 = makeNoise2(seed + 1, 40, 320);
+  const warp = makeNoise2(seed + 2, 6, 4);
+  const pores = makeNoise2(seed + 3, 260, 420);
+  const blotch = makeNoise2(seed + 4, 5, 2);
+  const c = document.createElement('canvas');
+  c.width = STRIP_W;
+  c.height = STRIP_H;
+  const g = c.getContext('2d')!;
+  const img = g.createImageData(STRIP_W, STRIP_H);
+  for (let y = 0; y < STRIP_H; y++) {
+    const v = y / STRIP_H;
+    for (let x = 0; x < STRIP_W; x++) {
+      const u = x / STRIP_W;
+      const w = warp(u, v);
+      // Anillos finos casi paralelos a la lama, con una deriva suave.
+      const ring = Math.sin((v * 13 + (w - 0.5) * 0.9 + Math.sin(u * Math.PI * 2 + v * 3) * 0.12) * Math.PI * 2);
+      const late = Math.pow(Math.max(0, ring), 5) * 0.11;
+      const f = fibers(u, v) * 0.55 + fibers2(u, v) * 0.45;
+      const p = pores(u, v) > 0.86 ? 0.05 : 0;
+      const k = (0.95 + (f - 0.5) * 0.16 - late - p) * (0.95 + blotch(u, v) * 0.1);
+      const i = (y * STRIP_W + x) * 4;
+      img.data[i] = clamp255(base[0] * k * (1 + late * 0.15));
+      img.data[i + 1] = clamp255(base[1] * k);
+      img.data[i + 2] = clamp255(base[2] * k * (1 - late * 0.25));
+      img.data[i + 3] = 255;
     }
-    g.stroke();
   }
-  // nudos ocasionales
-  if (r() < 0.25) {
-    g.globalAlpha = 0.35;
-    g.fillStyle = shade(base, tint * 0.6);
-    g.beginPath();
-    g.ellipse(x + r() * w, y + r() * h, 2 + r() * 5, 1.5 + r() * 2.5, 0, 0, Math.PI * 2);
-    g.fill();
+  g.putImageData(img, 0, 0);
+  stripCache.set(key, c);
+  return c;
+}
+
+/** Dibuja una lama recortando la tira de veta, con tono propio y biselado. */
+function drawPlank(g: CanvasRenderingContext2D, strip: HTMLCanvasElement, x: number, y: number, w: number, h: number, r: () => number, vertical: boolean) {
+  const len = vertical ? h : w;
+  const wid = vertical ? w : h;
+  const sw = Math.min(STRIP_W, len * (0.7 + r() * 0.5));
+  const sh = Math.min(STRIP_H, Math.max(8, wid * (0.6 + r() * 0.5)));
+  const sx = r() * (STRIP_W - sw);
+  const sy = r() * (STRIP_H - sh);
+  g.save();
+  g.beginPath();
+  g.rect(x, y, w, h);
+  g.clip();
+  if (vertical) {
+    g.translate(x + w, y);
+    g.rotate(Math.PI / 2);
+    g.drawImage(strip, sx, sy, sw, sh, 0, 0, h, w);
+  } else {
+    if (r() < 0.5) {
+      g.translate(x + w, y);
+      g.scale(-1, 1);
+      g.drawImage(strip, sx, sy, sw, sh, 0, 0, w, h);
+    } else g.drawImage(strip, sx, sy, sw, sh, x, y, w, h);
   }
-  g.globalAlpha = 1;
+  g.restore();
+  // Variación de tono entre lamas
+  const t = r();
+  g.fillStyle = t > 0.5 ? `rgba(255,240,220,${(t - 0.5) * 0.16})` : `rgba(40,20,5,${(0.5 - t) * 0.22})`;
+  g.fillRect(x, y, w, h);
+  // Biselado: luz arriba/izquierda, sombra abajo/derecha
+  g.fillStyle = 'rgba(255,255,255,0.07)';
+  g.fillRect(x, y, w, 2);
+  g.fillRect(x, y, 2, h);
+  g.fillStyle = 'rgba(0,0,0,0.16)';
+  g.fillRect(x, y + h - 2, w, 2);
+  g.fillRect(x + w - 2, y, 2, h);
 }
 
 function planks(base: RGB, seed: number, rows: number, cols: number, gap: number, stagger: boolean): Generated {
-  const { c, g } = canvas();
-  const bump = canvas();
+  const S = WOOD_SIZE;
+  const { c, g } = canvas(S);
+  const bump = canvas(S);
   bump.g.fillStyle = '#fff';
-  bump.g.fillRect(0, 0, SIZE, SIZE);
+  bump.g.fillRect(0, 0, S, S);
+  const strip = woodStrip(base, seed % 97);
   const r = rng(seed);
-  const ph = SIZE / rows;
-  const pw = SIZE / cols;
+  const ph = S / rows;
+  const pw = S / cols;
   for (let row = 0; row < rows; row++) {
-    const offset = stagger ? Math.floor(r() * cols) * pw * 0.5 + (row % 2) * pw * 0.37 : 0;
+    const offset = stagger ? (r() * 0.8 + 0.1) * pw : 0;
+    const y = row * ph;
     for (let k = -1; k <= cols; k++) {
-      const x = ((k * pw + offset) % SIZE + SIZE) % SIZE - pw;
-      for (const dx of [0, SIZE]) {
-        woodGrain(g, x + dx, row * ph, pw, ph, base, rng(seed + row * 131 + ((k + cols) % cols) * 17));
-      }
-      // juntas
-      for (const dx of [0, SIZE]) {
-        g.fillStyle = shade(base, 0.45);
-        g.fillRect(x + dx, row * ph, gap, ph);
-        bump.g.fillStyle = '#333';
-        bump.g.fillRect(x + dx, row * ph, gap, ph);
+      const x = k * pw + offset;
+      for (const dx of [0, -S]) {
+        const px = x + dx;
+        if (px > S || px + pw < 0) continue;
+        drawPlank(g, strip, px, y, pw, ph, rng(seed + row * 131 + (((k % cols) + cols) % cols) * 17), false);
+        // juntas
+        g.fillStyle = shade(base, 0.38);
+        g.fillRect(px, y, gap, ph);
+        bump.g.fillStyle = '#222';
+        bump.g.fillRect(px, y, gap, ph);
+        bump.g.fillStyle = '#bbb';
+        bump.g.fillRect(px + gap, y, 2, ph);
       }
     }
-    g.fillStyle = shade(base, 0.45);
-    g.fillRect(0, row * ph, SIZE, gap);
-    bump.g.fillStyle = '#333';
-    bump.g.fillRect(0, row * ph, SIZE, gap);
+    g.fillStyle = shade(base, 0.38);
+    g.fillRect(0, y, S, gap);
+    bump.g.fillStyle = '#222';
+    bump.g.fillRect(0, y, S, gap);
   }
-  return { color: c, bump: bump.c, bumpScale: 1.2 };
+  return { color: c, bump: bump.c, bumpScale: 1.4 };
 }
 
 function herringbone(base: RGB, seed: number): Generated {
   // Lamas de L = 4w; periodo del canvas = 8w (ver documentación de arquitectura).
-  const { c, g } = canvas();
-  const bump = canvas();
+  const S = WOOD_SIZE;
+  const { c, g } = canvas(S);
+  const bump = canvas(S);
   bump.g.fillStyle = '#fff';
-  bump.g.fillRect(0, 0, SIZE, SIZE);
-  const w = SIZE / 8;
+  bump.g.fillRect(0, 0, S, S);
+  const w = S / 8;
   const L = 4 * w;
-  const r = rng(seed);
-  const plank = (x: number, y: number, pw: number, ph: number, alongX: boolean) => {
-    for (const ox of [-SIZE, 0, SIZE])
-      for (const oy of [-SIZE, 0, SIZE]) {
+  const strip = woodStrip(base, seed % 97);
+  const plank = (x: number, y: number, pw: number, ph: number, vertical: boolean, id: number) => {
+    for (const ox of [-S, 0, S])
+      for (const oy of [-S, 0, S]) {
         const px = x + ox;
         const py = y + oy;
-        if (px > SIZE || py > SIZE || px + pw < 0 || py + ph < 0) continue;
-        woodGrain(g, px, py, pw, ph, base, rng(Math.floor(r() * 1e6)), alongX);
-        g.strokeStyle = shade(base, 0.45);
+        if (px > S || py > S || px + pw < 0 || py + ph < 0) continue;
+        drawPlank(g, strip, px, py, pw, ph, rng(seed + id * 7919), vertical);
+        g.strokeStyle = shade(base, 0.4);
         g.lineWidth = 2;
         g.strokeRect(px, py, pw, ph);
-        bump.g.strokeStyle = '#333';
-        bump.g.lineWidth = 2;
+        bump.g.strokeStyle = '#222';
+        bump.g.lineWidth = 2.5;
         bump.g.strokeRect(px, py, pw, ph);
       }
   };
@@ -202,11 +278,13 @@ function herringbone(base: RGB, seed: number): Generated {
     for (let k = -12; k <= 12; k++) {
       const ox = m * L;
       const oy = -m * L;
-      plank(ox + k * w, oy + k * w, L, w, true);
-      plank(ox + k * w + L, oy + k * w + w - L, w, L, false);
+      // (m, k) y (m±1, k+4) son la misma lama en la repetición: id invariante.
+      const id = ((((k + 4 * m) % 8) + 8) % 8) * 2;
+      plank(ox + k * w, oy + k * w, L, w, false, id);
+      plank(ox + k * w + L, oy + k * w + w - L, w, L, true, id + 1);
     }
   }
-  return { color: c, bump: bump.c, bumpScale: 1.2 };
+  return { color: c, bump: bump.c, bumpScale: 1.4 };
 }
 
 function marble(base: RGB, vein: RGB, seed: number): Generated {
@@ -339,23 +417,28 @@ function stone(base: RGB, seed: number, cells: number): Generated {
 }
 
 function wood(base: RGB, seed: number, panels: boolean): Generated {
-  const { c, g } = canvas();
+  const S = WOOD_SIZE;
+  const { c, g } = canvas(S);
+  const strip = woodStrip(base, seed % 97);
   const r = rng(seed);
   if (panels) {
     const count = 6;
-    const pw = SIZE / count;
+    const pw = S / count;
     for (let i = 0; i < count; i++) {
-      woodGrain(g, i * pw, 0, pw, SIZE, base, rng(seed + i * 31), false);
-      g.fillStyle = shade(base, 0.5);
-      g.fillRect(i * pw, 0, 3, SIZE);
+      drawPlank(g, strip, i * pw, 0, pw, S, rng(seed + i * 31), true);
+      g.fillStyle = shade(base, 0.45);
+      g.fillRect(i * pw, 0, 4, S);
     }
   } else {
-    woodGrain(g, 0, 0, SIZE, SIZE, base, r);
-    for (let i = 0; i < 40; i++) woodGrain(g, 0, r() * SIZE, SIZE, 6 + r() * 20, base, rng(seed + i), true);
+    // Tablero continuo: varias tiras apiladas sin juntas marcadas.
+    const rows = 4;
+    for (let i = 0; i < rows; i++) {
+      g.drawImage(strip, r() * (STRIP_W / 3), 0, STRIP_W * 0.66, STRIP_H, 0, (S / rows) * i, S, S / rows + 1);
+    }
   }
-  const bump = canvas();
+  const bump = canvas(S);
   bump.g.drawImage(c, 0, 0);
-  return { color: c, bump: bump.c, bumpScale: 0.4 };
+  return { color: c, bump: bump.c, bumpScale: 0.5 };
 }
 
 function grass(base: RGB, seed: number): Generated {
@@ -462,7 +545,7 @@ function toTexture(img: HTMLCanvasElement, def: MaterialDef, srgb: boolean): Tex
   t.wrapS = t.wrapT = RepeatWrapping;
   t.repeat.set(1 / def.tileSize, 1 / def.tileSize);
   t.colorSpace = srgb ? SRGBColorSpace : LinearSRGBColorSpace;
-  t.anisotropy = 8;
+  t.anisotropy = 16;
   // Al exportar a GLB/GLTF las texturas de color se guardan en JPEG (mucho más ligeras).
   if (srgb) t.userData.mimeType = 'image/jpeg';
   t.needsUpdate = true;

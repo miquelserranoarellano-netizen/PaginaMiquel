@@ -214,7 +214,7 @@ export async function exportModel(binary: boolean): Promise<void> {
 export async function exportScreenshot(): Promise<void> {
   const v = getViewer();
   if (!v) return void toast.info('Abre el modelo 3D o el recorrido para hacer una captura');
-  v.gl.render(v.scene, v.camera);
+  // Se captura el último fotograma ya compuesto (con postprocesado).
   const blob = await canvasToBlob(v.gl.domElement);
   const doc: ProjectDoc = projectApi.doc;
   if (await downloadOrSave(`${safeName(doc.name)} - captura.png`, blob, 'base64', [{ name: 'Imagen PNG', extensions: ['png'] }])) toast.success('Captura guardada');

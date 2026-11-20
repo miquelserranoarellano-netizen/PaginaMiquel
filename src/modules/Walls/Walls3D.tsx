@@ -38,7 +38,8 @@ const WallMesh = memo(function WallMesh({
     [wall, key, openings, elevation, cut],
   );
   useEffect(() => () => geometry.dispose(), [geometry]);
-  const materials = useMemo(() => [getMaterial(wall.sideA), getMaterial(wall.sideB), getMaterial(wall.sideA)], [wall.sideA, wall.sideB]);
+  // La coronación (y la base) se pinta siempre en blanco mate, como en las maquetas.
+  const materials = useMemo(() => [getMaterial(wall.sideA), getMaterial(wall.sideB), getMaterial(wall.sideA), getMaterial(WALL_CAP)], [wall.sideA, wall.sideB]);
   return (
     <mesh geometry={geometry} material={materials} castShadow receiveShadow userData={{ ref: { kind: 'wall', id: wall.id } }} {...pick('wall', wall.id)}>
       {selected && <Edges threshold={20} color="#2563eb" lineWidth={2} />}
@@ -80,3 +81,4 @@ export const Walls3D = memo(function Walls3D({
 });
 
 const EMPTY: Opening[] = [];
+const WALL_CAP = { materialId: 'pintura', color: '#f2f1ee' };
