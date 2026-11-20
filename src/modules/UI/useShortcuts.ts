@@ -38,7 +38,12 @@ export function useShortcuts() {
         void saveNow();
         return;
       }
-      if (ed.view === 'walk') return; // el recorrido gestiona su propio teclado
+      if (ed.view === 'walk') {
+        // El recorrido gestiona su propio teclado; solo se permiten cambios de vista.
+        if (e.key === '1') ed.setView('2d');
+        if (e.key === '2') ed.setView('3d');
+        return;
+      }
 
       const sel = ed.selection.filter((r) => !!projectApi.doc[COLLECTION[r.kind]][r.id]);
       if (mod && key === 'a' && ed.view === '2d') {

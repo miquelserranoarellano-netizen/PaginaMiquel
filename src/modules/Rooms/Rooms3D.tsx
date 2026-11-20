@@ -11,7 +11,7 @@ const RoomSlabs = memo(function RoomSlabs({ room, level, showCeiling, selected, 
   // Suelo: en planta baja casi sin espesor (sobre el terreno); en plantas altas, forjado completo.
   const floorThickness = level.order === 0 && level.elevation <= 0.01 ? 0.04 : level.slabThickness;
   const isWater = room.floor.materialId === 'agua';
-  const floorTop = level.elevation + (isWater ? -0.12 : 0.002);
+  const floorTop = level.elevation + (isWater ? 0.012 : 0.002);
   const floorGeo = useMemo(() => buildSlabGeometry(room.points, floorTop, isWater ? 0.02 : floorThickness), [room.points, floorTop, floorThickness, isWater]);
   const ceilingY = level.elevation + (room.ceilingHeight ?? level.height);
   const ceilGeo = useMemo(() => (room.hasCeiling ? buildSlabGeometry(room.points, ceilingY + CEILING_THICKNESS, CEILING_THICKNESS) : null), [room.points, ceilingY, room.hasCeiling]);
