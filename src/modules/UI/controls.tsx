@@ -45,6 +45,7 @@ interface NumberFieldProps {
   onChange: (v: number) => void;
   min?: number;
   max?: number;
+  /** Paso de flechas y botones (5 cm en longitudes, 0,01 en el resto). */
   step?: number;
   /** Decimales mostrados. */
   digits?: number;
@@ -60,7 +61,9 @@ interface NumberFieldProps {
  * breve pausa), al salir del campo o con Enter; Esc cancela; flechas ↑/↓
  * incrementan (Mayús ×10). En pantallas táctiles muestra botones − y +.
  */
-export function NumberField({ value, onChange, min = -Infinity, max = Infinity, step = 0.01, digits = 2, unit, length, disabled, title }: NumberFieldProps) {
+export function NumberField({ value, onChange, min = -Infinity, max = Infinity, step: stepProp, digits = 2, unit, length, disabled, title }: NumberFieldProps) {
+  // Las longitudes avanzan de 5 en 5 cm con las flechas y los botones − / +.
+  const step = stepProp ?? (length ? 0.05 : 0.01);
   const [text, setText] = useState(() => formatNumber(value, digits));
   const [error, setError] = useState<string | null>(null);
   const focused = useRef(false);

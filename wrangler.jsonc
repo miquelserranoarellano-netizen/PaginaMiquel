@@ -1,14 +1,29 @@
-// Despliegue en Cloudflare Workers (recursos estáticos): compila la app con
-// Vite y publica la carpeta dist. El nombre debe coincidir con el Worker
-// conectado al repositorio en el panel de Cloudflare.
+// Despliegue en Cloudflare Workers: compila la app con Vite y publica la
+// carpeta dist como recursos estáticos. Las rutas /api/* las atiende el Worker
+// (worker/index.ts): cuentas de usuario y proyectos guardados en D1.
+// El nombre debe coincidir con el Worker conectado al repositorio en Cloudflare.
 {
   "name": "paginamiquel",
+  "main": "worker/index.ts",
   "compatibility_date": "2025-10-01",
   "build": {
     "command": "npm run build"
   },
   "assets": {
     "directory": "./dist",
-    "not_found_handling": "single-page-application"
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"]
+  },
+  // Base de datos de cuentas y proyectos. Sin "database_id": Cloudflare la crea
+  // automáticamente en el primer despliegue (aprovisionamiento automático).
+  "d1_databases": [
+    {
+      "binding": "DB"
+    }
+  ],
+  "vars": {
+    // Pon "false" cuando ya hayas creado tus cuentas para cerrar el registro.
+    "ALLOW_SIGNUP": "true",
+    "MAX_USERS": "20"
   }
 }

@@ -114,7 +114,7 @@ export function useShortcuts() {
       }
       if (e.key.startsWith('Arrow') && sel.length) {
         e.preventDefault();
-        const step = (e.shiftKey ? 10 : 1) * (ed.gridSize || 0.1);
+        const step = (e.shiftKey ? 10 : 1) * (ed.gridSize || 0.05);
         const delta = { x: e.key === 'ArrowLeft' ? -step : e.key === 'ArrowRight' ? step : 0, y: e.key === 'ArrowUp' ? -step : e.key === 'ArrowDown' ? step : 0 };
         projectApi.apply((d) => translateElements(d, sel, delta));
         return;

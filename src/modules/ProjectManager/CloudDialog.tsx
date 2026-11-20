@@ -4,14 +4,13 @@
  */
 import { useEffect, useState, type ReactNode } from 'react';
 import { Cloud, CloudOff, LogOut, UploadCloud, X } from 'lucide-react';
-import { normalizeProject } from '@/modules/FloorPlan/validation';
 import { Button } from '@/modules/UI/controls';
 import { dialog } from '@/modules/UI/dialog';
 import { toast } from '@/modules/UI/toast';
 import { checkPublicKey, checkUrl, cloudAdapter, saveConfig, signIn, signOut, signUp, useCloud } from './cloud';
 import { isEmbeddedPage } from './files';
-import { buildMeta } from './persistence';
-import { getLocalStorage, useStorageLocation } from './storage';
+import { countLocalProjects, uploadLocalProjects } from './migrate';
+import { useStorageLocation } from './storage';
 
 const input = 'h-10 w-full rounded-lg border border-slate-200 px-3 text-[14px] outline-none focus:border-accent-500 focus:ring-2 focus:ring-accent-100';
 
@@ -155,29 +154,11 @@ function SignedInStep({ onChanged }: { onChanged: () => void }) {
   const [busy, setBusy] = useState<string | null>(null);
   const [uploaded, setUploaded] = useState(false);
   useEffect(() => {
-    getLocalStorage()
-      .list()
-      .then((l) => setLocal(l.length))
-      .catch(() => setLocal(0));
+    void countLocalProjects().then(setLocal);
   }, []);
   const upload = async () => {
-    const localStore = getLocalStorage();
-    const cloud = cloudAdapter();
-    const metas = await localStore.list();
-    const existing = new Set((await cloud.list()).map((m) => m.id));
-    let done = 0;
-    let skipped = 0;
-    for (const m of metas) {
-      setBusy(`Subiendo ${done + skipped + 1} de ${metas.length}…`);
-      if (existing.has(m.id)) {
-        skipped++;
-        continue;
-      }
-      const { doc } = normalizeProject(await localStore.load(m.id));
-      await cloud.save(doc, m.thumbnail ? { ...m, name: doc.name } : await buildMeta(doc));
-      done++;
-    }
-    toast.success(done ? `${done} proyecto${done === 1 ? '' : 's'} subido${done === 1 ? '' : 's'} a la nube${skipped ? ` (${skipped} ya estaban)` : ''}` : 'Todos tus proyectos ya estaban en la nube');
+    const r = await uploadLocalProjects(cloudAdapter(), (i, n) => setBusy(`Subiendo ${i} de ${n}…`));
+    toast.success(r.uploaded ? `${r.uploaded} proyecto${r.uploaded === 1 ? '' : 's'} subido${r.uploaded === 1 ? '' : 's'} a la nube${r.skipped ? ` (${r.skipped} ya estaban)` : ''}` : 'Todos tus proyectos ya estaban en la nube');
     setUploaded(true);
     onChanged();
   };

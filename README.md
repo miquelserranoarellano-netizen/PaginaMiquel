@@ -20,7 +20,7 @@ guarda los proyectos en tu propio equipo.
 ## Funcionalidades
 
 ### Plano 2D
-- Lienzo con cuadrícula (5 cm – 1 m), zoom con la rueda y desplazamiento (botón central, derecho o Espacio).
+- Lienzo con cuadrícula (5 cm por defecto, hasta 1 m), zoom con la rueda y desplazamiento (botón central, derecho o Espacio).
 - **Muros** por clic o arrastre, encadenados. Escribe la longitud (`3,5` o `350cm`) y pulsa **Enter** para una medida exacta. Grosor, altura, longitud y ángulo editables.
 - Ajuste (*snap*) a cuadrícula, extremos y puntos medios de muros, ángulos (0/45/90°, 15° con Mayús) y alineaciones. **Alt** desactiva el ajuste.
 - **Habitaciones** rectangulares (también tecleando `4x3`), poligonales o **detectadas automáticamente** al hacer clic dentro de un recinto cerrado por muros. Superficie útil calculada en m².
@@ -117,6 +117,26 @@ móvil; los que ya tenías en el navegador se suben solos la primera vez). Con
 sesión iniciada en Supabase, en tu cuenta en la nube. Los ficheros `.hdsp`
 exportados se pueden abrir con doble clic.
 
+### Cuentas de usuario (web)
+
+En la web publicada en Cloudflare, el botón **Iniciar sesión** de la pantalla de
+proyectos permite **crear una cuenta con usuario y contraseña** y entrar con ella
+desde cualquier dispositivo (móvil, tablet, otro ordenador) para ver y seguir
+editando tus casas. Con la sesión iniciada todo se guarda automáticamente en tu
+cuenta; *Subir a mi cuenta* copia los proyectos que ya tenías en ese dispositivo.
+
+- El servidor está en [`worker/index.ts`](worker/index.ts) (Cloudflare Workers) y
+  guarda cuentas y proyectos en una base de datos D1 que Cloudflare crea sola en
+  el primer despliegue.
+- Las contraseñas se guardan cifradas (PBKDF2), nunca en claro, y tras varios
+  intentos fallidos el acceso se bloquea unos minutos.
+- Cuando hayas creado tus cuentas puedes cerrar el registro poniendo
+  `ALLOW_SIGNUP` a `"false"` en `wrangler.jsonc` (o en Cloudflare → Settings →
+  Variables). Por defecto se admiten como máximo 20 cuentas (`MAX_USERS`).
+- Dentro de Claude no hay inicio de sesión (la página no puede conectarse a
+  servidores externos): allí los proyectos se guardan en tu cuenta de Claude.
+  Para llevar uno a la web usa *Exportar (.hdsp)* e *Importar proyecto*.
+
 ### Guardar en la nube (Supabase)
 
 1. Crea un proyecto gratuito en [supabase.com](https://supabase.com).
@@ -142,8 +162,9 @@ publicada en Cloudflare o la app de escritorio.
 
 ### Web (Cloudflare) y móvil
 
-`wrangler.jsonc` despliega la carpeta `dist` como sitio estático en Cloudflare
-Workers: cada push compila con `npm run build`. La interfaz se adapta al móvil
+`wrangler.jsonc` despliega la carpeta `dist` en Cloudflare Workers junto con la
+API de cuentas (`/api/*`): cada push compila con `npm run build`. Para probarlo
+todo en local: `npm run build && npx wrangler dev`. La interfaz se adapta al móvil
 (barra inferior, paneles deslizantes, pellizcar para hacer zoom, joystick en el
 recorrido).
 

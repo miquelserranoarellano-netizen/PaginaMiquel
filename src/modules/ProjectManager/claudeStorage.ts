@@ -27,11 +27,11 @@ function fromBase64(b64: string): Uint8Array {
   return out;
 }
 
-export async function encodeDoc(doc: ProjectDoc): Promise<string[]> {
+export async function encodeDoc(doc: ProjectDoc, chunk = CHUNK): Promise<string[]> {
   const { zlibSync, strToU8 } = await import('fflate');
   const b64 = toBase64(zlibSync(strToU8(JSON.stringify(doc)), { level: 6 }));
   const parts: string[] = [];
-  for (let i = 0; i < b64.length; i += CHUNK) parts.push(b64.slice(i, i + CHUNK));
+  for (let i = 0; i < b64.length; i += chunk) parts.push(b64.slice(i, i + chunk));
   return parts.length ? parts : [''];
 }
 

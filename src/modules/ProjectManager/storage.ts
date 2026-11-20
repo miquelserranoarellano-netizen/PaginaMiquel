@@ -8,10 +8,11 @@ import { createStore, del, entries, get, set } from 'idb-keyval';
 import type { ProjectDoc, ProjectMeta } from '@/modules/FloorPlan/types';
 import { create } from 'zustand';
 import { cloudActive, cloudAdapter, useCloud } from './cloud';
+import { accountActive, accountAdapter, useAccount } from './account';
 import { inClaude } from './claudeHost';
 
 export interface StorageAdapter {
-  kind: 'desktop' | 'browser' | 'cloud' | 'claude';
+  kind: 'desktop' | 'browser' | 'cloud' | 'claude' | 'account';
   list(): Promise<ProjectMeta[]>;
   load(id: string): Promise<unknown>;
   save(doc: ProjectDoc, meta: ProjectMeta): Promise<void>;
@@ -100,14 +101,14 @@ async function probeBrowser(a: StorageAdapter): Promise<boolean> {
 let adapter: StorageAdapter | null = null;
 
 /** Dónde se guardan ahora los proyectos (para mostrarlo en la interfaz). */
-export type StorageLocation = 'desktop' | 'browser' | 'memory' | 'claude' | 'cloud' | 'pending';
+export type StorageLocation = 'desktop' | 'browser' | 'memory' | 'claude' | 'cloud' | 'account' | 'pending';
 export const useStorageLocation = create<{ local: StorageLocation }>()(() => ({ local: 'pending' }));
 
 /** true si los proyectos solo se guardan en memoria (se pierden al cerrar). */
 export const isVolatileStorage = (): boolean => useStorageLocation.getState().local === 'memory';
 
 export function storageLocation(): StorageLocation {
-  return useCloud.getState().email ? 'cloud' : useStorageLocation.getState().local;
+  return useAccount.getState().username ? 'account' : useCloud.getState().email ? 'cloud' : useStorageLocation.getState().local;
 }
 
 /** Almacenamiento local (escritorio o navegador). */
@@ -160,9 +161,14 @@ function localStorageAdapter(): StorageAdapter {
 }
 
 let cloud: StorageAdapter | null = null;
+let account: StorageAdapter | null = null;
 
-/** Adaptador activo: la nube (Supabase) si hay sesión iniciada; si no, este dispositivo. */
+/**
+ * Adaptador activo: tu cuenta de HomeDesign (web) o Supabase si hay sesión
+ * iniciada; si no, este dispositivo (o la cuenta de Claude dentro de Claude).
+ */
 export function getStorage(): StorageAdapter {
+  if (accountActive()) return (account ??= accountAdapter());
   if (cloudActive()) return (cloud ??= cloudAdapter());
   return localStorageAdapter();
 }

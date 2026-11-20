@@ -78,7 +78,7 @@ export function MultiWallProperties({ walls }: { walls: Wall[] }) {
   return (
     <Section title={`${walls.length} muros`}>
       <Field label="Grosor">
-        <NumberField value={thickness ?? walls[0].thickness} min={LIMITS.wallThickness.min} max={LIMITS.wallThickness.max} unit="m" length onChange={(v) => setAll((w) => (w.thickness = v))} />
+        <NumberField value={thickness ?? walls[0].thickness} min={LIMITS.wallThickness.min} max={LIMITS.wallThickness.max} step={0.01} unit="m" length onChange={(v) => setAll((w) => (w.thickness = v))} />
       </Field>
       <Field label="Altura">
         <NumberField value={height ?? walls[0].height} min={LIMITS.wallHeight.min} max={LIMITS.wallHeight.max} unit="m" length onChange={(v) => setAll((w) => (w.height = v))} />

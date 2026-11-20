@@ -151,6 +151,14 @@ trazado de muros se hace en 2D (es donde se puede dibujar con precisión).
   `…/chunks/<n>` con el documento comprimido con zlib en trozos de ~200 KB, cada
   uno marcado con la versión para detectar guardados incompletos). Mantiene una
   copia en IndexedDB y sube automáticamente los proyectos locales la primera vez.
+* Cuentas web: `worker/index.ts` (Cloudflare Workers + D1) expone `/api/register`,
+  `/api/login`, `/api/logout`, `/api/me` y `/api/projects[/id]`. Contraseñas con
+  PBKDF2-SHA256 (100 000 iteraciones), sesiones con token aleatorio del que solo
+  se guarda el hash, bloqueo progresivo tras 5 fallos y cuotas por proyecto y
+  usuario. Los proyectos llegan comprimidos desde la app y se guardan troceados
+  en una transacción. En el cliente, `ProjectManager/account.ts` comprueba
+  `/api/health`, recuerda la sesión y aporta el `StorageAdapter`; tiene
+  prioridad sobre Supabase y el almacenamiento local cuando hay sesión.
 * Nube (opcional): `ProjectManager/cloud.ts` implementa el mismo `StorageAdapter`
   sobre Supabase (`supabase/schema.sql`: tabla `projects` con clave
   `(user_id, id)`, columnas `meta` y `doc` en JSONB y RLS `auth.uid() = user_id`).

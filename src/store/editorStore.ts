@@ -109,7 +109,16 @@ type Prefs = Pick<EditorState, 'gridSize' | 'snapToGrid' | 'snapToObjects' | 'pl
 function loadPrefs(): Partial<Prefs> {
   try {
     const raw = localStorage.getItem(PREFS_KEY);
-    return raw ? (JSON.parse(raw) as Partial<Prefs>) : {};
+    const p = raw ? (JSON.parse(raw) as Partial<Prefs>) : {};
+    // La cuadrícula pasó de 10 a 5 cm por defecto: se actualiza una vez a quien tenía la antigua.
+    if (!localStorage.getItem('homedesign.grid5')) {
+      if (p.gridSize === 0.1) {
+        p.gridSize = 0.05;
+        localStorage.setItem(PREFS_KEY, JSON.stringify(p));
+      }
+      localStorage.setItem('homedesign.grid5', '1');
+    }
+    return p;
   } catch {
     return {};
   }
@@ -129,7 +138,7 @@ export const useEditorStore = create<EditorState>()((set) => ({
   selection: [],
   hover: null,
   activeLevelId: '',
-  gridSize: prefs.gridSize ?? 0.1,
+  gridSize: prefs.gridSize ?? 0.05,
   snapToGrid: prefs.snapToGrid ?? true,
   snapToObjects: prefs.snapToObjects ?? true,
   plan: { grid: true, wallLengths: true, roomLabels: true, furniture: true, dimensions: true, lowerLevel: true, ...prefs.plan },

@@ -10,13 +10,17 @@ import { openDocument, openProjectById } from './persistence';
 import { useStorageLocation } from './storage';
 import { useCloud } from './cloud';
 import { CloudButton, CloudDialog } from './CloudDialog';
+import { useAccount } from './account';
+import { AccountButton, AccountDialog } from './AccountDialog';
 import { createSampleHouse } from './sampleHouse';
 
 const dateFmt = new Intl.DateTimeFormat('es-ES', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
 function ProjectCard({ meta, onChanged }: { meta: ProjectMeta; onChanged: () => void }) {
   const [menu, setMenu] = useState(false);
-  const inCloud = useCloud((s) => !!s.email);
+  const inSupabase = useCloud((s) => !!s.email);
+  const inWebAccount = useAccount((s) => !!s.username);
+  const inCloud = inSupabase || inWebAccount;
   const inAccount = useStorageLocation((s) => s.local === 'claude');
   const run = (fn: () => Promise<void>) => async () => {
     setMenu(false);
@@ -84,11 +88,15 @@ function ProjectCard({ meta, onChanged }: { meta: ProjectMeta; onChanged: () => 
 export function ProjectsScreen() {
   const [projects, setProjects] = useState<ProjectMeta[] | null>(null);
   const [cloudOpen, setCloudOpen] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
   const email = useCloud((s) => s.email);
   const cloudReady = useCloud((s) => s.ready);
+  const cloudConfigured = useCloud((s) => !!s.config);
+  const accounts = useAccount((s) => s.available);
+  const username = useAccount((s) => s.username);
   const location = useStorageLocation((s) => s.local);
   const refresh = useCallback(() => {
-    if (!useCloud.getState().ready) return;
+    if (!useCloud.getState().ready || useAccount.getState().available === null) return;
     listProjects()
       .then(setProjects)
       .catch((e) => {
@@ -96,7 +104,7 @@ export function ProjectsScreen() {
         setProjects([]);
       });
   }, []);
-  useEffect(refresh, [refresh, email, cloudReady]);
+  useEffect(refresh, [refresh, email, cloudReady, accounts, username]);
 
   return (
     <div className="h-full overflow-y-auto bg-canvas thin-scroll">
@@ -110,7 +118,8 @@ export function ProjectsScreen() {
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
-            <CloudButton onClick={() => setCloudOpen(true)} />
+            {accounts && <AccountButton onClick={() => setAccountOpen(true)} />}
+            {(!accounts || cloudConfigured) && !username && <CloudButton onClick={() => setCloudOpen(true)} />}
             <Button
               onClick={async () => {
                 const doc = await importProjectFile();
@@ -136,7 +145,7 @@ export function ProjectsScreen() {
         </header>
 
         <section className="mt-8">
-          <h2 className="mb-3 text-[12px] font-semibold uppercase tracking-wider text-slate-500">{email ? 'Mis proyectos en la nube' : 'Mis proyectos'}</h2>
+          <h2 className="mb-3 text-[12px] font-semibold uppercase tracking-wider text-slate-500">{username ? `Proyectos de ${username}` : email ? 'Mis proyectos en la nube' : 'Mis proyectos'}</h2>
           {projects === null ? (
             <p className="text-slate-500">Cargando…</p>
           ) : projects.length === 0 ? (
@@ -162,7 +171,9 @@ export function ProjectsScreen() {
           )}
         </section>
         <footer className={`mt-10 text-[11.5px] ${location === 'memory' ? 'text-amber-700' : 'text-slate-400'}`}>
-          {email
+          {username
+            ? `Los proyectos se guardan en tu cuenta (${username}): entra con tu usuario desde cualquier dispositivo para verlos.`
+            : email
             ? `Los proyectos se guardan en tu cuenta de Supabase (${email}).`
             : location === 'claude'
               ? 'Los proyectos se guardan automáticamente en tu cuenta de Claude: los encontrarás al volver a abrir la app, también desde el móvil.'
@@ -170,10 +181,13 @@ export function ProjectsScreen() {
                 ? 'Los proyectos se guardan en la carpeta de datos de la aplicación, con copia de seguridad automática.'
                 : location === 'memory'
                   ? 'Este navegador no deja guardar datos: los proyectos se perderán al cerrar. Expórtalos o guárdalos en la nube.'
-                  : 'Los proyectos se guardan en este navegador. Usa “Guardar en la nube” para tenerlos en todos tus dispositivos, o “Exportar” para hacer copias.'}
+                  : accounts
+                    ? 'Los proyectos se guardan en este navegador. Inicia sesión para guardarlos en tu cuenta y verlos en todos tus dispositivos.'
+                    : 'Los proyectos se guardan en este navegador. Usa “Guardar en la nube” para tenerlos en todos tus dispositivos, o “Exportar” para hacer copias.'}
         </footer>
       </div>
       {cloudOpen && <CloudDialog onClose={() => setCloudOpen(false)} onChanged={refresh} />}
+      {accountOpen && <AccountDialog onClose={() => setAccountOpen(false)} onChanged={refresh} />}
     </div>
   );
 }
