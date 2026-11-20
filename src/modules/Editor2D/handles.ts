@@ -3,7 +3,7 @@ import { degToRad } from '@/core/units';
 import type { ElementRef, ProjectDoc } from '@/modules/FloorPlan/types';
 import { wallFrame } from '@/modules/Walls/geometry';
 
-export type HandleKind = 'wall-start' | 'wall-end' | 'room-vertex' | 'furn-rotate' | 'dim-start' | 'dim-end' | 'dim-offset' | 'opening-left' | 'opening-right';
+export type HandleKind = 'wall-start' | 'wall-end' | 'room-vertex' | 'furn-rotate' | 'furn-resize' | 'dim-start' | 'dim-end' | 'dim-offset' | 'opening-left' | 'opening-right';
 
 export interface Handle {
   kind: HandleKind;
@@ -29,7 +29,17 @@ export function getHandles(doc: ProjectDoc, selection: readonly ElementRef[], zo
       const f = doc.furniture[ref.id];
       if (!f) return [];
       const off = f.depth / 2 + Math.max(0.25, 26 / zoom);
-      return [{ kind: 'furn-rotate', ref, pos: add(f.position, rotate({ x: 0, y: -off }, degToRad(f.rotation))) }];
+      const rad = degToRad(f.rotation);
+      const corners = [
+        { x: -f.width / 2, y: -f.depth / 2 },
+        { x: f.width / 2, y: -f.depth / 2 },
+        { x: f.width / 2, y: f.depth / 2 },
+        { x: -f.width / 2, y: f.depth / 2 },
+      ];
+      return [
+        { kind: 'furn-rotate', ref, pos: add(f.position, rotate({ x: 0, y: -off }, rad)) },
+        ...corners.map((c, index) => ({ kind: 'furn-resize' as const, ref, index, pos: add(f.position, rotate(c, rad)) })),
+      ];
     }
     case 'dimension': {
       const d = doc.dimensions[ref.id];

@@ -62,7 +62,7 @@ export function SelectTool() {
         const target = h ? null : hit(p);
         const cur = ed.hover;
         if ((target?.id ?? null) !== (cur?.id ?? null)) ed.setHover(target);
-        setCursor(h ? (h.kind === 'furn-rotate' ? 'grab' : 'crosshair') : target ? 'move' : 'default');
+        setCursor(h ? (h.kind === 'furn-rotate' ? 'grab' : h.kind === 'furn-resize' ? 'nwse-resize' : 'crosshair') : target ? 'move' : 'default');
         return;
       }
       if (s.mode === 'pending') {
@@ -94,6 +94,10 @@ export function SelectTool() {
         const snapped = snapWorld(p.world, zoom, levelId, { anchor, constrain: p.shiftKey, free: p.altKey, excludePoints: [s.start], useGestureBase: true });
         projectApi.updateGesture((d) => applyHandle(d, h, { point: snapped.point, raw: p.world, gridSize: ed.gridSize, snap: !p.altKey }));
         if (anchor) ed.setLiveMeasure(`Longitud: ${formatLength(distance(anchor, snapped.point))}`);
+        if (h.kind === 'furn-resize') {
+          const f = projectApi.doc.furniture[h.ref.id];
+          if (f) ed.setLiveMeasure(`${formatLength(f.width)} × ${formatLength(f.depth)}`);
+        }
         return;
       }
       if (s.mode === 'marquee') setMarquee({ a: s.start, b: p.world });

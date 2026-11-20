@@ -8,12 +8,20 @@ import { CATEGORY_LABELS, type CatalogItem, type FurnitureCategory } from './typ
 import { FurnitureSymbol } from './Furniture2D';
 import { addFurnitureAtViewCenter } from './placementActions';
 import { ImportModelButton } from './ImportModelButton';
+import { useThumbnail } from './thumbnails';
+import { ImportedModels } from './ImportedModels';
 
 function Thumb({ item }: { item: CatalogItem }) {
+  const url = useThumbnail(item);
+  if (url) return <img src={url} alt="" className="h-14 w-full object-contain" draggable={false} />;
+  return <PlanThumb item={item} />;
+}
+
+function PlanThumb({ item }: { item: CatalogItem }) {
   const pad = Math.max(item.w, item.d) * 0.12;
   const vb = `${-item.w / 2 - pad} ${-item.d / 2 - pad} ${item.w + pad * 2} ${item.d + pad * 2}`;
   return (
-    <svg viewBox={vb} className="h-12 w-full" preserveAspectRatio="xMidYMid meet">
+    <svg viewBox={vb} className="h-14 w-full p-1.5 opacity-70" preserveAspectRatio="xMidYMid meet">
       <FurnitureSymbol item={{ catalogId: item.id, width: item.w, depth: item.d, height: item.h, materials: item.slots, name: item.name }} />
     </svg>
   );
@@ -90,6 +98,7 @@ export function LibraryPanel() {
             </div>
           );
         })}
+        <ImportedModels />
       </div>
       <div className="border-t border-slate-200 p-3">
         <ImportModelButton />

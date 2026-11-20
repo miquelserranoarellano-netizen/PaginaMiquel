@@ -1,6 +1,6 @@
 /** Aplicación de los tiradores sobre el documento (dentro de un gesto). */
-import { type Vec2, cleanVec, dot, normalize, perp, projectOnSegment, roundTo, sub, distance } from '@/core/geometry';
-import { normalizeDeg } from '@/core/units';
+import { type Vec2, add, cleanVec, dot, normalize, perp, projectOnSegment, rotate, roundTo, sub, distance } from '@/core/geometry';
+import { degToRad, normalizeDeg } from '@/core/units';
 import type { ID, ProjectDoc } from '@/modules/FloorPlan/types';
 import { moveWallEndpoint, clampOpenings } from '@/modules/Walls/ops';
 import { nearestWall, wallFrame } from '@/modules/Walls/geometry';
@@ -31,6 +31,31 @@ export function applyHandle(doc: ProjectDoc, h: Handle, inp: HandleInput): void 
       let deg = (Math.atan2(inp.raw.y - f.position.y, inp.raw.x - f.position.x) * 180) / Math.PI + 90;
       if (inp.snap) deg = roundTo(deg, 15);
       f.rotation = Math.round(normalizeDeg(deg) * 10) / 10;
+      break;
+    }
+    case 'furn-resize': {
+      // Se mantiene fija la esquina opuesta; medidas ajustadas a 5 cm.
+      const f = doc.furniture[h.ref.id];
+      if (!f || h.index === undefined) break;
+      const rad = degToRad(f.rotation);
+      const signs = [
+        [-1, -1],
+        [1, -1],
+        [1, 1],
+        [-1, 1],
+      ][h.index];
+      const opp = { x: (-signs[0] * f.width) / 2, y: (-signs[1] * f.depth) / 2 };
+      const local = rotate(sub(inp.raw, f.position), -rad);
+      let w = Math.max(0.05, (local.x - opp.x) * signs[0]);
+      let d = Math.max(0.05, (local.y - opp.y) * signs[1]);
+      if (inp.snap) {
+        w = Math.max(0.05, roundTo(w, 0.05));
+        d = Math.max(0.05, roundTo(d, 0.05));
+      }
+      const centerLocal = { x: opp.x + (signs[0] * w) / 2, y: opp.y + (signs[1] * d) / 2 };
+      f.position = cleanVec(add(f.position, rotate(centerLocal, rad)));
+      f.width = Math.round(w * 1000) / 1000;
+      f.depth = Math.round(d * 1000) / 1000;
       break;
     }
     case 'dim-start':

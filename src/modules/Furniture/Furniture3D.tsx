@@ -3,8 +3,8 @@
  */
 import { memo, Suspense, use, useMemo } from 'react';
 import { Edges } from '@react-three/drei';
-import { Box3, BoxGeometry, ConeGeometry, CylinderGeometry, type BufferGeometry, type Group, type Mesh, SphereGeometry, Vector3 } from 'three';
-import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
+import { Box3, type Group, type Mesh, Vector3 } from 'three';
+import { partGeometry } from './geometries';
 import { degToRad } from '@/core/units';
 import type { Asset, FurnitureItem, Level } from '@/modules/FloorPlan/types';
 import { getMaterial } from '@/modules/Materials/materials3d';
@@ -13,32 +13,11 @@ import { getCatalogItem } from './catalog';
 import type { Part } from './types';
 import { loadAssetModel } from './gltf';
 
-const UNIT = {
-  box: new BoxGeometry(1, 1, 1),
-  cyl: new CylinderGeometry(0.5, 0.5, 1, 28),
-  sphere: new SphereGeometry(0.5, 24, 16),
-  cone: new ConeGeometry(0.5, 1, 28),
-};
-
-const rounded = new Map<string, BufferGeometry>();
-function roundedBox(w: number, h: number, d: number, r: number): BufferGeometry {
-  const radius = Math.max(0.001, Math.min(r, w / 2 - 0.001, h / 2 - 0.001, d / 2 - 0.001));
-  const key = `${w.toFixed(3)}|${h.toFixed(3)}|${d.toFixed(3)}|${radius.toFixed(3)}`;
-  let g = rounded.get(key);
-  if (!g) {
-    g = new RoundedBoxGeometry(w, h, d, 3, radius);
-    if (rounded.size > 800) rounded.clear();
-    rounded.set(key, g);
-  }
-  return g;
-}
-
 function PartMesh({ part, item }: { part: Part; item: FurnitureItem }) {
   const cat = getCatalogItem(item.catalogId);
   const ref = item.materials[part.m] ?? cat?.slots[part.m] ?? { materialId: 'plastico', color: '#cccccc' };
   const material = getMaterial(ref);
-  const isRounded = part.s === 'rbox';
-  const geometry = isRounded ? roundedBox(part.d[0], part.d[1], part.d[2], part.radius ?? 0.03) : UNIT[part.s === 'cyl' ? 'cyl' : part.s === 'sphere' ? 'sphere' : part.s === 'cone' ? 'cone' : 'box'];
+  const { geometry, scale } = partGeometry(part);
   const emissive = ref.materialId === 'luz';
   return (
     <mesh
@@ -46,7 +25,7 @@ function PartMesh({ part, item }: { part: Part; item: FurnitureItem }) {
       material={material}
       position={part.p}
       rotation={part.r ?? [0, 0, 0]}
-      scale={isRounded ? [1, 1, 1] : part.d}
+      scale={scale}
       castShadow={!emissive}
       receiveShadow
     />

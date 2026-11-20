@@ -66,7 +66,7 @@ export const SelectionOverlay = memo(function SelectionOverlay({ doc, selection,
             </g>
           );
         }
-        const square = h.kind === 'opening-left' || h.kind === 'opening-right' || h.kind === 'dim-offset';
+        const square = h.kind === 'opening-left' || h.kind === 'opening-right' || h.kind === 'dim-offset' || h.kind === 'furn-resize';
         return square ? (
           <rect key={i} x={h.pos.x - r} y={h.pos.y - r} width={r * 2} height={r * 2} fill="#ffffff" stroke={SEL} strokeWidth={2} vectorEffect="non-scaling-stroke" />
         ) : (
