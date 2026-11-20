@@ -33,6 +33,8 @@
   "vars": {
     // Pon "false" cuando ya hayas creado tus cuentas para cerrar el registro.
     "ALLOW_SIGNUP": "true",
+    // URL de la API de Supabase (no es secreta). La clave va como secreto en Cloudflare.
+    "SUPABASE_URL": "https://suuzmqtucudauaifqgtp.supabase.co",
     "MAX_USERS": "20"
   }
 }
