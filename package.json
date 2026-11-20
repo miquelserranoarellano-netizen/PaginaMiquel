@@ -1,0 +1,112 @@
+{
+  "name": "diseno-de-casas",
+  "productName": "HomeDesign Studio",
+  "version": "1.0.0",
+  "description": "HomeDesign Studio – Diseño de casas en 2D y 3D con recorrido virtual en primera persona",
+  "author": "HomeDesign Studio",
+  "license": "UNLICENSED",
+  "private": true,
+  "type": "module",
+  "main": "electron/main.cjs",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "electron:dev": "concurrently -k -n vite,electron \"vite --port 5173 --strictPort\" \"wait-on tcp:5173 && cross-env VITE_DEV_SERVER_URL=http://localhost:5173 electron .\"",
+    "electron:start": "npm run build && electron .",
+    "dist": "npm run build && electron-builder",
+    "dist:win": "npm run build && electron-builder --win",
+    "dist:mac": "npm run build && electron-builder --mac",
+    "dist:linux": "npm run build && electron-builder --linux"
+  },
+  "devDependencies": {
+    "@react-three/drei": "^10.7.9",
+    "@react-three/fiber": "^9.8.2",
+    "@react-three/postprocessing": "^3.2.2",
+    "@tailwindcss/vite": "^4.3.5",
+    "@types/node": "^22.20.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@types/three": "^0.180.0",
+    "@vitejs/plugin-react": "^5.2.0",
+    "concurrently": "^10.0.7",
+    "cross-env": "^10.1.0",
+    "electron": "^45.4.1",
+    "electron-builder": "^26.18.0",
+    "fflate": "^0.8.3",
+    "idb-keyval": "^6.3.0",
+    "immer": "^10.2.0",
+    "jspdf": "^3.0.4",
+    "lucide-react": "^1.77.0",
+    "postprocessing": "^6.39.6",
+    "react": "~19.2.0",
+    "react-dom": "~19.2.0",
+    "tailwindcss": "^4.3.5",
+    "three": "^0.180.0",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.8",
+    "vitest": "^3.2.7",
+    "wait-on": "^9.5.1",
+    "zustand": "^5.1.0"
+  },
+  "build": {
+    "appId": "com.homedesign.studio",
+    "productName": "HomeDesign Studio",
+    "copyright": "© HomeDesign Studio",
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "build/icon.png",
+      "package.json"
+    ],
+    "asar": true,
+    "fileAssociations": [
+      {
+        "ext": "hdsp",
+        "name": "Proyecto HomeDesign",
+        "description": "Proyecto de HomeDesign Studio"
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "shortcutName": "HomeDesign Studio"
+    },
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "category": "public.app-category.productivity",
+      "icon": "build/icon.png"
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "category": "Graphics",
+      "icon": "build/icon.png",
+      "synopsis": "Diseño de viviendas en 2D y 3D",
+      "executableName": "homedesign-studio"
+    },
+    "executableName": "HomeDesign Studio"
+  }
+}
