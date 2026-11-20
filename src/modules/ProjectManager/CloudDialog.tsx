@@ -11,7 +11,7 @@ import { toast } from '@/modules/UI/toast';
 import { checkPublicKey, checkUrl, cloudAdapter, saveConfig, signIn, signOut, signUp, useCloud } from './cloud';
 import { isEmbeddedPage } from './files';
 import { buildMeta } from './persistence';
-import { getLocalStorage } from './storage';
+import { getLocalStorage, useStorageLocation } from './storage';
 
 const input = 'h-10 w-full rounded-lg border border-slate-200 px-3 text-[14px] outline-none focus:border-accent-500 focus:ring-2 focus:ring-accent-100';
 
@@ -27,6 +27,14 @@ function Label({ text, children }: { text: string; children: ReactNode }) {
 /** Botón de estado para la cabecera de la lista de proyectos. */
 export function CloudButton({ onClick }: { onClick: () => void }) {
   const { config, email } = useCloud();
+  const account = useStorageLocation((s) => s.local === 'claude');
+  if (account && !email)
+    return (
+      <Button onClick={onClick} title="Tus proyectos se guardan en tu cuenta de Claude">
+        <Cloud size={14} className="text-accent-600" />
+        <span>En tu cuenta de Claude</span>
+      </Button>
+    );
   return (
     <Button onClick={onClick} title={email ? `Guardando en la nube como ${email}` : 'Guardar tus proyectos en Supabase'}>
       {email ? <Cloud size={14} className="text-accent-600" /> : <CloudOff size={14} />}
@@ -247,7 +255,7 @@ export function CloudDialog({ onClose, onChanged }: { onClose: () => void; onCha
         </div>
         {embedded ? (
           <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-[12.5px] leading-relaxed text-amber-900">
-            Dentro de Claude la página no puede conectarse a servicios externos. Abre la app en su web (Cloudflare) o en la versión de escritorio para guardar en Supabase. Aquí puedes seguir trabajando y exportar tus proyectos (.hdsp) para importarlos allí.
+            Aquí, dentro de Claude, tus proyectos ya se guardan automáticamente en tu cuenta de Claude (los verás también desde el móvil). La página no puede conectarse a servicios externos como Supabase: para usarlo, abre la app en su web (Cloudflare) o en la versión de escritorio. Puedes llevarte un proyecto con Exportar (.hdsp) e importarlo allí.
           </p>
         ) : !config ? (
           <ConfigStep />

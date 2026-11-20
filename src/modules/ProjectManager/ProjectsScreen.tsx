@@ -7,7 +7,7 @@ import { dialog } from '@/modules/UI/dialog';
 import { toast } from '@/modules/UI/toast';
 import { createProject, deleteProject, duplicateProject, exportStoredProject, importProjectFile, listProjects, renameProject } from './actions';
 import { openDocument, openProjectById } from './persistence';
-import { isDesktop, isVolatileStorage } from './storage';
+import { useStorageLocation } from './storage';
 import { useCloud } from './cloud';
 import { CloudButton, CloudDialog } from './CloudDialog';
 import { createSampleHouse } from './sampleHouse';
@@ -17,6 +17,7 @@ const dateFmt = new Intl.DateTimeFormat('es-ES', { day: 'numeric', month: 'short
 function ProjectCard({ meta, onChanged }: { meta: ProjectMeta; onChanged: () => void }) {
   const [menu, setMenu] = useState(false);
   const inCloud = useCloud((s) => !!s.email);
+  const inAccount = useStorageLocation((s) => s.local === 'claude');
   const run = (fn: () => Promise<void>) => async () => {
     setMenu(false);
     try {
@@ -68,7 +69,7 @@ function ProjectCard({ meta, onChanged }: { meta: ProjectMeta; onChanged: () => 
             type="button"
             className="flex w-full items-center gap-2 px-3 py-2 text-red-600 hover:bg-red-50"
             onClick={run(async () => {
-              const ok = await dialog.confirm({ title: `¿Eliminar "${meta.name}"?`, message: inCloud ? 'El proyecto se borrará de tu cuenta en la nube (en todos tus dispositivos). Si quieres conservar una copia, expórtalo antes.' : 'El proyecto se borrará de este equipo. Si quieres conservar una copia, expórtalo antes.', confirmText: 'Eliminar', danger: true });
+              const ok = await dialog.confirm({ title: `¿Eliminar "${meta.name}"?`, message: inCloud || inAccount ? `El proyecto se borrará de tu cuenta ${inCloud ? 'en la nube' : 'de Claude'} (en todos tus dispositivos). Si quieres conservar una copia, expórtalo antes.` : 'El proyecto se borrará de este equipo. Si quieres conservar una copia, expórtalo antes.', confirmText: 'Eliminar', danger: true });
               if (ok) await deleteProject(meta.id);
             })}
           >
@@ -85,6 +86,7 @@ export function ProjectsScreen() {
   const [cloudOpen, setCloudOpen] = useState(false);
   const email = useCloud((s) => s.email);
   const cloudReady = useCloud((s) => s.ready);
+  const location = useStorageLocation((s) => s.local);
   const refresh = useCallback(() => {
     if (!useCloud.getState().ready) return;
     listProjects()
@@ -159,14 +161,16 @@ export function ProjectsScreen() {
             </div>
           )}
         </section>
-        <footer className="mt-10 text-[11.5px] text-slate-400">
+        <footer className={`mt-10 text-[11.5px] ${location === 'memory' ? 'text-amber-700' : 'text-slate-400'}`}>
           {email
             ? `Los proyectos se guardan en tu cuenta de Supabase (${email}).`
-            : isDesktop()
-              ? 'Los proyectos se guardan en la carpeta de datos de la aplicación, con copia de seguridad automática.'
-              : isVolatileStorage()
-                ? 'Este navegador no deja guardar datos: los proyectos se perderán al cerrar. Expórtalos o guárdalos en la nube.'
-                : 'Los proyectos se guardan en este navegador. Usa “Guardar en la nube” para tenerlos en todos tus dispositivos, o “Exportar” para hacer copias.'}
+            : location === 'claude'
+              ? 'Los proyectos se guardan automáticamente en tu cuenta de Claude: los encontrarás al volver a abrir la app, también desde el móvil.'
+              : location === 'desktop'
+                ? 'Los proyectos se guardan en la carpeta de datos de la aplicación, con copia de seguridad automática.'
+                : location === 'memory'
+                  ? 'Este navegador no deja guardar datos: los proyectos se perderán al cerrar. Expórtalos o guárdalos en la nube.'
+                  : 'Los proyectos se guardan en este navegador. Usa “Guardar en la nube” para tenerlos en todos tus dispositivos, o “Exportar” para hacer copias.'}
         </footer>
       </div>
       {cloudOpen && <CloudDialog onClose={() => setCloudOpen(false)} onChanged={refresh} />}

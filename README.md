@@ -111,8 +111,11 @@ Al empezar, pulsa **Abrir casa de ejemplo** para explorar una vivienda completa
 
 **¿Dónde se guardan los proyectos?** En la versión de escritorio, en la carpeta de
 datos de la aplicación (`Archivo → Abrir carpeta de proyectos`). En el navegador,
-en IndexedDB. Con sesión iniciada en Supabase, en tu cuenta en la nube. Los
-ficheros `.hdsp` exportados se pueden abrir con doble clic.
+en IndexedDB. Abierta dentro de Claude, en **tu cuenta de Claude** (base de datos
+privada de la página: los proyectos aparecen al volver a abrirla, también desde el
+móvil; los que ya tenías en el navegador se suben solos la primera vez). Con
+sesión iniciada en Supabase, en tu cuenta en la nube. Los ficheros `.hdsp`
+exportados se pueden abrir con doble clic.
 
 ### Guardar en la nube (Supabase)
 

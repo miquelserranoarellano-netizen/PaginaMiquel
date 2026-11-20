@@ -146,6 +146,11 @@ trazado de muros se hace en 2D (es donde se puede dibujar con precisión).
   y rellena valores por defecto; los errores se muestran sin perder datos.
 * Si IndexedDB no responde (ventana privada, marcos restringidos) se usa memoria
   y la interfaz avisa de que hay que exportar.
+* Dentro de Claude: `ProjectManager/claudeStorage.ts` guarda en la base de datos
+  privada del usuario (`data/users/<id>/p_<proyecto>` con la ficha y
+  `…/chunks/<n>` con el documento comprimido con zlib en trozos de ~200 KB, cada
+  uno marcado con la versión para detectar guardados incompletos). Mantiene una
+  copia en IndexedDB y sube automáticamente los proyectos locales la primera vez.
 * Nube (opcional): `ProjectManager/cloud.ts` implementa el mismo `StorageAdapter`
   sobre Supabase (`supabase/schema.sql`: tabla `projects` con clave
   `(user_id, id)`, columnas `meta` y `doc` en JSONB y RLS `auth.uid() = user_id`).

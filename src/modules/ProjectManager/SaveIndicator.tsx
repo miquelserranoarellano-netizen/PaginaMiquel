@@ -1,5 +1,6 @@
 import { AlertCircle, Check, Cloud, Loader2, Save } from 'lucide-react';
 import { useCloud } from './cloud';
+import { useStorageLocation } from './storage';
 import { useSaveStore } from './saveStore';
 import { saveNow } from './persistence';
 import { Button } from '@/modules/UI/controls';
@@ -7,8 +8,9 @@ import { Button } from '@/modules/UI/controls';
 export function SaveIndicator() {
   const { status, error } = useSaveStore();
   const cloud = useCloud((s) => !!s.email);
+  const account = useStorageLocation((s) => s.local === 'claude');
   const map = {
-    saved: { icon: cloud ? <Cloud size={13} /> : <Check size={13} />, text: cloud ? 'Guardado en la nube' : 'Guardado', cls: 'text-accent-700' },
+    saved: { icon: cloud || account ? <Cloud size={13} /> : <Check size={13} />, text: cloud ? 'Guardado en la nube' : account ? 'Guardado en tu cuenta' : 'Guardado', cls: 'text-accent-700' },
     dirty: { icon: <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />, text: 'Sin guardar', cls: 'text-slate-500' },
     saving: { icon: <Loader2 size={13} className="animate-spin" />, text: 'Guardando…', cls: 'text-slate-500' },
     error: { icon: <AlertCircle size={13} />, text: 'Error al guardar', cls: 'text-red-600' },

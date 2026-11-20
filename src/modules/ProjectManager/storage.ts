@@ -6,10 +6,12 @@
  */
 import { createStore, del, entries, get, set } from 'idb-keyval';
 import type { ProjectDoc, ProjectMeta } from '@/modules/FloorPlan/types';
-import { cloudActive, cloudAdapter } from './cloud';
+import { create } from 'zustand';
+import { cloudActive, cloudAdapter, useCloud } from './cloud';
+import { inClaude } from './claudeHost';
 
 export interface StorageAdapter {
-  kind: 'desktop' | 'browser' | 'cloud';
+  kind: 'desktop' | 'browser' | 'cloud' | 'claude';
   list(): Promise<ProjectMeta[]>;
   load(id: string): Promise<unknown>;
   save(doc: ProjectDoc, meta: ProjectMeta): Promise<void>;
@@ -96,29 +98,55 @@ async function probeBrowser(a: StorageAdapter): Promise<boolean> {
 }
 
 let adapter: StorageAdapter | null = null;
-let volatile = false;
+
+/** Dónde se guardan ahora los proyectos (para mostrarlo en la interfaz). */
+export type StorageLocation = 'desktop' | 'browser' | 'memory' | 'claude' | 'cloud' | 'pending';
+export const useStorageLocation = create<{ local: StorageLocation }>()(() => ({ local: 'pending' }));
 
 /** true si los proyectos solo se guardan en memoria (se pierden al cerrar). */
-export const isVolatileStorage = (): boolean => volatile;
+export const isVolatileStorage = (): boolean => useStorageLocation.getState().local === 'memory';
+
+export function storageLocation(): StorageLocation {
+  return useCloud.getState().email ? 'cloud' : useStorageLocation.getState().local;
+}
 
 /** Almacenamiento local (escritorio o navegador). */
 function localStorageAdapter(): StorageAdapter {
   if (adapter) return adapter;
   if (typeof window !== 'undefined' && window.homeDesign?.isDesktop) {
     adapter = desktopAdapter();
+    useStorageLocation.setState({ local: 'desktop' });
     return adapter;
   }
-  // Se decide de forma perezosa: IndexedDB si responde, si no memoria.
+  // Se decide de forma perezosa: dentro de Claude, la cuenta del usuario;
+  // si no, IndexedDB si responde y, como último recurso, memoria.
   let chosen: Promise<StorageAdapter> | null = null;
   const pick = () =>
     (chosen ??= (async () => {
+      let browser: StorageAdapter | null = null;
       try {
         const b = browserAdapter();
-        if (await probeBrowser(b)) return b;
+        if (await probeBrowser(b)) browser = b;
       } catch {
         /* sin IndexedDB */
       }
-      volatile = true;
+      if (inClaude()) {
+        try {
+          const { claudeAdapter } = await import('./claudeStorage');
+          const c = await claudeAdapter(browser);
+          if (c) {
+            useStorageLocation.setState({ local: 'claude' });
+            return c;
+          }
+        } catch (e) {
+          console.warn('Sin guardado en la cuenta de Claude', e);
+        }
+      }
+      if (browser) {
+        useStorageLocation.setState({ local: 'browser' });
+        return browser;
+      }
+      useStorageLocation.setState({ local: 'memory' });
       return memoryAdapter();
     })());
   adapter = {
