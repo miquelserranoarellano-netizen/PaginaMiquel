@@ -2,8 +2,9 @@
 // carpeta dist como recursos estáticos. Las rutas /api/* las atiende el Worker
 // (worker/index.ts): cuentas de usuario y proyectos.
 //
-// Base de datos: Supabase si en Cloudflare (Settings → Variables and Secrets)
-// existen los secretos SUPABASE_URL y SUPABASE_SERVICE_KEY; si no, D1.
+// Base de datos: Supabase si en Cloudflare existen SUPABASE_URL y
+// SUPABASE_SERVICE_KEY (en Settings → Variables and Secrets o en Settings →
+// Build → Variables and secrets); si no, D1.
 // No escribas nunca la clave de Supabase en este fichero.
 // El nombre debe coincidir con el Worker conectado al repositorio en Cloudflare.
 {
@@ -11,7 +12,9 @@
   "main": "worker/index.ts",
   "compatibility_date": "2025-10-01",
   "build": {
-    "command": "npm run build"
+    // Antes de compilar incluye la configuración de Supabase de la sección Build
+    // (solo en Cloudflare; ver scripts/worker-build-config.mjs).
+    "command": "node scripts/worker-build-config.mjs && npm run build"
   },
   "assets": {
     "directory": "./dist",

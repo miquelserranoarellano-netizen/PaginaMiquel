@@ -11,5 +11,5 @@
     "noEmit": true,
     "types": []
   },
-  "include": ["index.ts", "store.ts"]
+  "include": ["index.ts", "store.ts", "build-config.ts"]
 }

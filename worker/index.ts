@@ -11,6 +11,7 @@
  */
 
 import { D1Store, type D1Database, type Store, StoreError, SupabaseStore, type StoredProject } from './store';
+import { BUILD_CONFIG } from './build-config';
 
 interface Env {
   /** Base de datos D1 (se usa si Supabase no está configurado). */
@@ -34,7 +35,10 @@ const USERNAME = /^[A-Za-z0-9_.-]{3,32}$/;
 const PROJECT_ID = /^[A-Za-z0-9_-]{1,64}$/;
 
 function stores(env: Env): { store: Store; legacy: Store | null } {
-  if (env.SUPABASE_URL && env.SUPABASE_SERVICE_KEY) return { store: new SupabaseStore(env.SUPABASE_URL, env.SUPABASE_SERVICE_KEY), legacy: env.DB ? new D1Store(env.DB) : null };
+  // Primero las variables del Worker; si no, las de compilación (sección Build).
+  const url = env.SUPABASE_URL || BUILD_CONFIG.SUPABASE_URL;
+  const key = env.SUPABASE_SERVICE_KEY || BUILD_CONFIG.SUPABASE_SERVICE_KEY;
+  if (url && key) return { store: new SupabaseStore(url, key), legacy: env.DB ? new D1Store(env.DB) : null };
   if (env.DB) return { store: new D1Store(env.DB), legacy: null };
   throw new HttpError(503, 'No hay base de datos configurada (Supabase o D1)');
 }
