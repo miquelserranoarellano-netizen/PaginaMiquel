@@ -26,6 +26,20 @@ export default defineConfig(({ command }) => ({
       },
     },
   ],
+  // Dependencias pesadas pre-empaquetadas para evitar recargas en desarrollo.
+  optimizeDeps: {
+    include: [
+      'three',
+      '@react-three/fiber',
+      '@react-three/drei',
+      'three/examples/jsm/environments/RoomEnvironment.js',
+      'three/examples/jsm/geometries/RoundedBoxGeometry.js',
+      'three/examples/jsm/loaders/GLTFLoader.js',
+      'three/examples/jsm/exporters/GLTFExporter.js',
+      'jspdf',
+      'idb-keyval',
+    ],
+  },
   resolve: {
     alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
   },

@@ -30,10 +30,9 @@ function ProjectCard({ meta, onChanged }: { meta: ProjectMeta; onChanged: () => 
         </div>
         <div className="border-t border-slate-100 px-4 py-3">
           <div className="truncate text-[14px] font-semibold text-slate-900">{meta.name}</div>
-          <div className="mt-0.5 flex items-center gap-2 text-[11.5px] text-slate-500">
-            <span>{dateFmt.format(meta.updatedAt)}</span>
-            {meta.area ? <span>· {formatArea(meta.area)}</span> : null}
-            {meta.rooms ? <span>· {meta.rooms} estancias</span> : null}
+          <div className="mt-0.5 text-[11.5px] text-slate-500">{dateFmt.format(meta.updatedAt)}</div>
+          <div className="mt-0.5 text-[11.5px] text-slate-500">
+            {meta.rooms ? `${meta.rooms} estancias · ${formatArea(meta.area ?? 0)} útiles` : 'Sin estancias'}
           </div>
         </div>
       </button>
