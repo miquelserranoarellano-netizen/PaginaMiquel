@@ -17,7 +17,7 @@ import { GridLayer } from './GridLayer';
 import { PlanDrawing, UnderlayDrawing } from './PlanDrawing';
 import { SelectionOverlay } from './SelectionOverlay';
 import { type PlanContextValue, PlanContext, type PlanPointer, type ToolHandlers } from './toolContext';
-import { type Size, fitBBox, screenToWorld, worldTransform, zoomAt } from './viewport';
+import { type Size, MAX_ZOOM, MIN_ZOOM, fitBBox, screenToWorld, worldTransform, zoomAt } from './viewport';
 import { SelectTool } from './tools/SelectTool';
 import { WallTool } from './tools/WallTool';
 import { RoomDetectTool, RoomPolyTool, RoomRectTool } from './tools/RoomTools';
@@ -153,6 +153,11 @@ export function PlanCanvas() {
     forceCursor((n) => n + 1);
   }, []);
 
+  // Gestos táctiles: dos dedos = zoom y desplazamiento; un dedo en vacío = desplazar.
+  const touches = useRef(new Map<number, Vec2>());
+  const pinch = useRef<{ d0: number; mid0: Vec2; vp0: Viewport2D } | null>(null);
+  const touchBlocked = useRef(false);
+
   const toPointer = (e: React.PointerEvent | React.MouseEvent): PlanPointer => {
     const rect = svgRef.current!.getBoundingClientRect();
     const screen = { x: e.clientX - rect.left, y: e.clientY - rect.top };
@@ -163,23 +168,53 @@ export function PlanCanvas() {
       shiftKey: e.shiftKey,
       altKey: e.altKey,
       ctrlKey: e.ctrlKey || e.metaKey,
+      touch: 'pointerType' in e && e.pointerType === 'touch',
     };
   };
 
   const onPointerDown = (e: React.PointerEvent) => {
     svgRef.current?.setPointerCapture(e.pointerId);
     const p = toPointer(e);
+    if (p.touch) {
+      touches.current.set(e.pointerId, p.screen);
+      if (touches.current.size === 2) {
+        // Segundo dedo: se cancela la acción en curso y empieza el pellizco.
+        if (useProjectStore.getState().gestureBase) projectApi.cancelGesture();
+        handlers.current?.onCancel?.();
+        pan.current = null;
+        setPanning(false);
+        const [a, b] = [...touches.current.values()];
+        pinch.current = { d0: Math.max(10, Math.hypot(a.x - b.x, a.y - b.y)), mid0: { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }, vp0: useEditorStore.getState().viewport };
+        touchBlocked.current = true;
+        return;
+      }
+      if (touches.current.size > 2 || touchBlocked.current) return;
+    }
     if (e.button === 1 || e.button === 2 || (e.button === 0 && (spaceDown || tool === 'pan'))) {
       pan.current = { start: p.screen, vp: useEditorStore.getState().viewport, button: e.button, moved: e.button !== 2 };
       if (e.button !== 2) setPanning(true);
       return;
     }
-    handlers.current?.onPointerDown?.(p);
+    const used = handlers.current?.onPointerDown?.(p);
+    if (p.touch && used === false) pan.current = { start: p.screen, vp: useEditorStore.getState().viewport, button: 0, moved: false };
   };
 
   const onPointerMove = (e: React.PointerEvent) => {
     const p = toPointer(e);
-    useEditorStore.getState().setCursor(p.world);
+    if (p.touch && touches.current.has(e.pointerId)) touches.current.set(e.pointerId, p.screen);
+    const pz = pinch.current;
+    if (pz && touches.current.size >= 2) {
+      const [a, b] = [...touches.current.values()];
+      const d = Math.max(10, Math.hypot(a.x - b.x, a.y - b.y));
+      const mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+      const zoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, pz.vp0.zoom * (d / pz.d0)));
+      // El punto del plano que estaba bajo los dedos sigue bajo los dedos.
+      const anchor = screenToWorld(pz.vp0, sizeRef.current, pz.mid0);
+      useEditorStore.getState().setViewport({ zoom, cx: anchor.x - (mid.x - sizeRef.current.w / 2) / zoom, cy: anchor.y - (mid.y - sizeRef.current.h / 2) / zoom });
+      return;
+    }
+    if (p.touch && touchBlocked.current) return;
+    if (!p.touch) useEditorStore.getState().setCursor(p.world);
     const pn = pan.current;
     if (pn) {
       const dx = p.screen.x - pn.start.x;
@@ -196,6 +231,14 @@ export function PlanCanvas() {
 
   const onPointerUp = (e: React.PointerEvent) => {
     const p = toPointer(e);
+    if (p.touch) {
+      touches.current.delete(e.pointerId);
+      if (touches.current.size < 2) pinch.current = null;
+      if (touchBlocked.current) {
+        if (touches.current.size === 0) touchBlocked.current = false;
+        return;
+      }
+    }
     const pn = pan.current;
     if (pn) {
       if (pn.button === 2 && !pn.moved) handlers.current?.onContextClick?.(p);
@@ -247,11 +290,20 @@ export function PlanCanvas() {
           ref={svgRef}
           width={size.w}
           height={size.h}
-          className="plan-svg absolute inset-0 touch-none"
+          className="plan-svg absolute inset-0 touch-none [-webkit-touch-callout:none]"
           style={{ cursor }}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
+          onPointerCancel={(e) => {
+            touches.current.delete(e.pointerId);
+            pinch.current = null;
+            if (touches.current.size === 0) touchBlocked.current = false;
+            pan.current = null;
+            setPanning(false);
+            if (useProjectStore.getState().gestureBase) projectApi.cancelGesture();
+            handlers.current?.onCancel?.();
+          }}
           onDoubleClick={(e) => handlers.current?.onDoubleClick?.(toPointer(e))}
           onPointerLeave={() => {
             useEditorStore.getState().setCursor(null);

@@ -62,3 +62,17 @@ input[type='range'] {
 .plan-svg text {
   font-family: var(--font-sans);
 }
+
+/* Pantallas táctiles: sin zoom automático de iOS al enfocar campos y sin retraso de doble toque */
+@media (pointer: coarse) {
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+  button,
+  a,
+  [role='button'] {
+    touch-action: manipulation;
+  }
+}

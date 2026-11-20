@@ -26,8 +26,10 @@ export function SelectTool() {
 
   const hit = (p: PlanPointer) => {
     const ed = useEditorStore.getState();
-    return hitTest(projectApi.doc, levelId, p.world, { furniture: ed.plan.furniture, dimensions: ed.plan.dimensions, tol: 6 / zoom });
+    return hitTest(projectApi.doc, levelId, p.world, { furniture: ed.plan.furniture, dimensions: ed.plan.dimensions, tol: (p.touch ? 14 : 6) / zoom });
   };
+  // Con el dedo los tiradores tienen el doble de zona de toque.
+  const handleZoom = (p: PlanPointer) => (p.touch ? zoom / 2 : zoom);
 
   useTool({
     cursor,
@@ -35,7 +37,7 @@ export function SelectTool() {
       if (p.button !== 0) return;
       const ed = useEditorStore.getState();
       const doc = projectApi.doc;
-      const h = hitHandle(getHandles(doc, ed.selection, zoom), p.world, zoom);
+      const h = hitHandle(getHandles(doc, ed.selection, zoom), p.world, handleZoom(p));
       if (h) {
         st.current = { mode: 'handle', handle: h, start: { ...h.pos }, startScreen: p.screen, refs: [], shift: false };
         projectApi.beginGesture();
@@ -43,6 +45,11 @@ export function SelectTool() {
       }
       const target = hit(p);
       if (target) {
+        // En táctil, el primer toque solo selecciona; arrastrar sobre algo no seleccionado desplaza el plano.
+        if (p.touch && !ed.selection.some((r) => r.id === target.id)) {
+          ed.select([target]);
+          return false;
+        }
         if (p.shiftKey) ed.toggleSelect(target);
         else if (!ed.selection.some((r) => r.id === target.id)) ed.select([target]);
         const sel = useEditorStore.getState().selection.filter((r) => elementExists(doc, r));
@@ -50,8 +57,16 @@ export function SelectTool() {
         return;
       }
       if (!p.shiftKey) ed.clearSelection();
+      // En táctil, arrastrar en vacío desplaza el plano en lugar de seleccionar por área.
+      if (p.touch) return false;
       st.current = { mode: 'marquee', start: p.world, startScreen: p.screen, refs: [], shift: p.shiftKey };
       setMarquee({ a: p.world, b: p.world });
+    },
+
+    onCancel: () => {
+      st.current = { ...st.current, mode: 'idle' };
+      setMarquee(null);
+      useEditorStore.getState().setLiveMeasure(null);
     },
 
     onPointerMove: (p) => {

@@ -2,6 +2,7 @@ import { Maximize, Minus, Plus } from 'lucide-react';
 import { useEditorStore } from '@/store/editorStore';
 import { formatNumber } from '@/core/units';
 import { zoomAt, type Size } from './viewport';
+import { useCompact } from '@/modules/UI/useLayout';
 
 const HINTS: Record<string, string> = {
   select: 'Clic para seleccionar · Mayús+clic: añadir · Arrastra en vacío para seleccionar por área · Supr: borrar · Ctrl+D: duplicar',
@@ -20,6 +21,7 @@ export function PlanOverlays({ size }: { size: Size }) {
   const vp = useEditorStore((s) => s.viewport);
   const setViewport = useEditorStore((s) => s.setViewport);
   const requestFit = useEditorStore((s) => s.requestFit);
+  const compact = useCompact();
 
   // Barra de escala: longitud "redonda" que ocupe ~80-160 px.
   const candidates = [0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50];
@@ -29,7 +31,7 @@ export function PlanOverlays({ size }: { size: Size }) {
 
   return (
     <>
-      <div className="pointer-events-none absolute bottom-3 left-1/2 max-w-[70%] -translate-x-1/2 truncate rounded-full bg-slate-900/75 px-3.5 py-1.5 text-[11.5px] text-white shadow">{HINTS[tool]}</div>
+      {!compact && <div className="pointer-events-none absolute bottom-3 left-1/2 max-w-[70%] -translate-x-1/2 truncate rounded-full bg-slate-900/75 px-3.5 py-1.5 text-[11.5px] text-white shadow">{HINTS[tool]}</div>}
       <div className="pointer-events-none absolute bottom-4 left-4 flex flex-col items-start gap-1">
         <div className="text-[11px] font-medium text-slate-600">{meters < 1 ? `${formatNumber(meters * 100, 0)} cm` : `${formatNumber(meters, 0)} m`}</div>
         <div className="h-1.5 border-x-2 border-b-2 border-slate-600" style={{ width: px }} />

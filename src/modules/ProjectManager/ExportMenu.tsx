@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
-import { Box, Camera, ChevronDown, Download, FileImage, FileText, Package } from 'lucide-react';
+import { Box, Camera, ChevronDown, Download, FileImage, FileText, Package, Save } from 'lucide-react';
+import { saveNow } from './persistence';
 import { Button } from '@/modules/UI/controls';
 import { toast } from '@/modules/UI/toast';
 import { useEditorStore } from '@/store/editorStore';
 import { exportModel, exportPlanPdf, exportPlanPng, exportProject, exportScreenshot } from './exporters';
 
-export function ExportMenu() {
+export function ExportMenu({ compact }: { compact?: boolean }) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const view = useEditorStore((s) => s.view);
@@ -44,11 +45,11 @@ export function ExportMenu() {
 
   return (
     <div ref={ref} className="relative">
-      <Button variant="primary" onClick={() => setOpen(!open)} disabled={busy}>
-        <Download size={14} /> {busy ? 'Exportando…' : 'Exportar'} <ChevronDown size={13} />
+      <Button variant="primary" onClick={() => setOpen(!open)} disabled={busy} className={compact ? 'px-2.5' : undefined} title="Exportar">
+        <Download size={14} /> {!compact && (busy ? 'Exportando…' : 'Exportar')} {!compact && <ChevronDown size={13} />}
       </Button>
       {open && (
-        <div className="absolute right-0 top-10 z-30 w-72 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-xl">
+        <div className="absolute right-0 top-10 z-30 max-h-[75vh] w-72 max-w-[calc(100vw-1rem)] overflow-y-auto rounded-xl border border-slate-200 bg-white py-1 shadow-xl">
           <div className="px-3 pb-1 pt-2 text-[10.5px] font-semibold uppercase tracking-wider text-slate-400">Planos</div>
           <Item icon={<FileImage size={16} />} label="Plano en PNG" hint="Planta activa, alta resolución" onClick={run(exportPlanPng)} />
           <Item icon={<FileText size={16} />} label="Planos en PDF" hint="A3 a escala, con cajetín y superficies" onClick={run(exportPlanPdf)} />
@@ -58,6 +59,12 @@ export function ExportMenu() {
           <Item icon={<Camera size={16} />} label="Captura 3D (PNG)" hint={view === '2d' ? 'Disponible en el modelo 3D o el recorrido' : 'Imagen de la vista actual'} onClick={run(exportScreenshot)} disabled={view === '2d'} />
           <div className="px-3 pb-1 pt-2 text-[10.5px] font-semibold uppercase tracking-wider text-slate-400">Proyecto</div>
           <Item icon={<Package size={16} />} label="Proyecto (.hdsp)" hint="Copia completa para guardar o compartir" onClick={run(exportProject)} />
+          {compact && (
+            <>
+              <div className="px-3 pb-1 pt-2 text-[10.5px] font-semibold uppercase tracking-wider text-slate-400">Guardar</div>
+              <Item icon={<Save size={16} />} label="Guardar ahora" hint="Los cambios también se guardan solos" onClick={run(async () => void (await saveNow()))} />
+            </>
+          )}
         </div>
       )}
     </div>

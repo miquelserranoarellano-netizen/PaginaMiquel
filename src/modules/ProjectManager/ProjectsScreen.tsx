@@ -37,7 +37,7 @@ function ProjectCard({ meta, onChanged }: { meta: ProjectMeta; onChanged: () => 
           </div>
         </div>
       </button>
-      <button type="button" onClick={() => setMenu(!menu)} className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-md bg-white/90 text-slate-600 opacity-0 shadow-sm transition hover:bg-white group-hover:opacity-100" title="Opciones">
+      <button type="button" onClick={() => setMenu(!menu)} className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-md bg-white/90 text-slate-600 shadow-sm transition hover:bg-white [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100" title="Opciones">
         <MoreHorizontal size={16} />
       </button>
       {menu && (
@@ -91,7 +91,7 @@ export function ProjectsScreen() {
 
   return (
     <div className="h-full overflow-y-auto bg-canvas thin-scroll">
-      <div className="mx-auto max-w-6xl px-8 py-10">
+      <div className="mx-auto max-w-6xl px-4 py-6 sm:px-8 sm:py-10">
         <header className="flex flex-wrap items-end justify-between gap-4">
           <div className="flex items-center gap-3">
             <img src="./icon.svg" alt="" className="h-11 w-11" />

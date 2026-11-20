@@ -8,6 +8,8 @@ import { StatusBar } from './StatusBar';
 import { LevelBar } from './LevelBar';
 import { useShortcuts } from './useShortcuts';
 import { ErrorBoundary } from './ErrorBoundary';
+import { useCompact } from './useLayout';
+import { MobileBar, MobileDrawers } from './MobileChrome';
 
 const Viewer3D = lazy(() => import('@/modules/Editor3D/Viewer3D'));
 
@@ -19,6 +21,31 @@ export function AppShell() {
   useShortcuts();
   const view = useEditorStore((s) => s.view);
   const walk = view === 'walk';
+  const compact = useCompact();
+  const viewer = (
+    <ErrorBoundary label="el visor">
+      {view === '2d' ? (
+        <PlanCanvas />
+      ) : (
+        <Suspense fallback={<Loading />}>
+          <Viewer3D />
+        </Suspense>
+      )}
+    </ErrorBoundary>
+  );
+  if (compact) {
+    return (
+      <div className="flex h-full flex-col">
+        <TopBar compact />
+        <main className="relative min-h-0 flex-1 bg-white">
+          {viewer}
+          {!walk && <LevelBar />}
+        </main>
+        {!walk && <MobileBar />}
+        <MobileDrawers />
+      </div>
+    );
+  }
   return (
     <div className="flex h-full flex-col">
       <TopBar />

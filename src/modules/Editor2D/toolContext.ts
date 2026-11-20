@@ -13,11 +13,16 @@ export interface PlanPointer {
   shiftKey: boolean;
   altKey: boolean;
   ctrlKey: boolean;
+  /** Dedo en pantalla táctil (tolerancias mayores, sin estado "hover"). */
+  touch: boolean;
 }
 
 /** Manejadores que cada herramienta registra en el lienzo. */
 export interface ToolHandlers {
-  onPointerDown?: (p: PlanPointer) => void;
+  /** Devuelve false si no usa el toque (en táctil el lienzo se desplaza entonces). */
+  onPointerDown?: (p: PlanPointer) => boolean | void;
+  /** La acción en curso se interrumpe (p. ej. empieza un gesto de dos dedos). */
+  onCancel?: () => void;
   onPointerMove?: (p: PlanPointer) => void;
   onPointerUp?: (p: PlanPointer) => void;
   onDoubleClick?: (p: PlanPointer) => void;
@@ -52,6 +57,7 @@ export function useTool(handlers: ToolHandlers): void {
   useEffect(() => {
     const proxy: ToolHandlers = {
       onPointerDown: (p) => ref.current.onPointerDown?.(p),
+      onCancel: () => ref.current.onCancel?.(),
       onPointerMove: (p) => ref.current.onPointerMove?.(p),
       onPointerUp: (p) => ref.current.onPointerUp?.(p),
       onDoubleClick: (p) => ref.current.onDoubleClick?.(p),

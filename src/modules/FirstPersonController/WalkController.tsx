@@ -13,7 +13,7 @@ import { useEditorStore } from '@/store/editorStore';
 import { useProjectStore } from '@/store/projectStore';
 import { EYE_HEIGHT, buildColliders, moveWithCollisions } from './collision';
 import { roomAt, spawnPoint } from './spawn';
-import { useWalkStore, walkRequests } from './walkStore';
+import { useWalkStore, walkInput, walkRequests } from './walkStore';
 
 const WALK_SPEED = 1.5;
 const RUN_SPEED = 3.2;
@@ -46,7 +46,7 @@ export function WalkController() {
     [openingsAll, walls, levelId],
   );
 
-  const st = useRef({ x: 0, z: 0, y: EYE_HEIGHT, yaw: 0, pitch: 0, vx: 0, vz: 0, vy: 0, bob: 0, keys: new Set<string>(), hudT: 0, dragging: false, skip: 0 });
+  const st = useRef({ x: 0, z: 0, y: EYE_HEIGHT, yaw: 0, pitch: 0, vx: 0, vz: 0, vy: 0, bob: 0, keys: new Set<string>(), hudT: 0, skip: 0 });
 
   // Posición inicial y cambio de planta.
   useEffect(() => {
@@ -86,8 +86,11 @@ export function WalkController() {
       s.yaw -= dx * LOOK_SENS;
       s.pitch = Math.max(-1.5, Math.min(1.5, s.pitch - dy * LOOK_SENS));
     };
+    // Ratón: clic para bloquear el puntero. Dedo (o ratón sin bloqueo): arrastrar para mirar.
+    let lastType = 'mouse';
+    let drag: { id: number; x: number; y: number; touch: boolean } | null = null;
     const onClick = () => {
-      if (document.pointerLockElement !== dom) {
+      if (lastType === 'mouse' && document.pointerLockElement !== dom) {
         const req = dom.requestPointerLock?.() as unknown as Promise<void> | undefined;
         req?.catch?.(() => undefined);
       }
@@ -99,12 +102,26 @@ export function WalkController() {
     };
     const onMouseMove = (e: MouseEvent) => {
       if (document.pointerLockElement === dom) look(e.movementX, e.movementY);
-      else if (s.dragging) look(e.movementX * 1.4, e.movementY * 1.4);
     };
     const onDown = (e: PointerEvent) => {
-      if (document.pointerLockElement !== dom && e.button === 0) s.dragging = true;
+      lastType = e.pointerType;
+      if (e.pointerType !== 'mouse') useWalkStore.getState().set({ interacted: true });
+      if (document.pointerLockElement === dom || (e.pointerType === 'mouse' && e.button !== 0)) return;
+      drag = { id: e.pointerId, x: e.clientX, y: e.clientY, touch: e.pointerType !== 'mouse' };
     };
-    const onUp = () => (s.dragging = false);
+    const onPointerMove = (e: PointerEvent) => {
+      if (!drag || e.pointerId !== drag.id || document.pointerLockElement === dom) return;
+      const k = drag.touch ? 2.6 : 1.4;
+      const dx = e.clientX - drag.x;
+      const dy = e.clientY - drag.y;
+      drag.x = e.clientX;
+      drag.y = e.clientY;
+      s.yaw -= dx * LOOK_SENS * k;
+      s.pitch = Math.max(-1.5, Math.min(1.5, s.pitch - dy * LOOK_SENS * k));
+    };
+    const onUp = (e: PointerEvent) => {
+      if (drag && e.pointerId === drag.id) drag = null;
+    };
     const typing = (e: KeyboardEvent) => {
       const t = e.target as HTMLElement | null;
       return !!t && (t.tagName === 'INPUT' || t.tagName === 'SELECT' || t.tagName === 'TEXTAREA');
@@ -117,9 +134,12 @@ export function WalkController() {
     };
     const onKeyUp = (e: KeyboardEvent) => s.keys.delete(e.code);
     const onBlur = () => s.keys.clear();
+    dom.style.touchAction = 'none';
     dom.addEventListener('click', onClick);
     dom.addEventListener('pointerdown', onDown);
     window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', onUp);
+    window.addEventListener('pointermove', onPointerMove);
     document.addEventListener('pointerlockchange', onLockChange);
     window.addEventListener('mousemove', onMouseMove);
     window.addEventListener('keydown', onKeyDown);
@@ -129,6 +149,8 @@ export function WalkController() {
       dom.removeEventListener('click', onClick);
       dom.removeEventListener('pointerdown', onDown);
       window.removeEventListener('pointerup', onUp);
+      window.removeEventListener('pointercancel', onUp);
+      window.removeEventListener('pointermove', onPointerMove);
       document.removeEventListener('pointerlockchange', onLockChange);
       window.removeEventListener('mousemove', onMouseMove);
       window.removeEventListener('keydown', onKeyDown);
@@ -160,7 +182,10 @@ export function WalkController() {
     if (k.has('KeyS') || k.has('ArrowDown')) iz += 1;
     if (k.has('KeyA') || k.has('ArrowLeft')) ix -= 1;
     if (k.has('KeyD') || k.has('ArrowRight')) ix += 1;
-    const len = Math.hypot(ix, iz) || 1;
+    // Joystick táctil (analógico): se suma al teclado.
+    ix += walkInput.x;
+    iz += walkInput.y;
+    const len = Math.max(1, Math.hypot(ix, iz));
     ix /= len;
     iz /= len;
     const sin = Math.sin(s.yaw);
@@ -168,7 +193,7 @@ export function WalkController() {
     // Adelante = (-sin, -cos); derecha = (cos, -sin)
     const wx = -iz * -sin + ix * cos;
     const wz = -iz * -cos + ix * -sin;
-    const run = k.has('ShiftLeft') || k.has('ShiftRight');
+    const run = k.has('ShiftLeft') || k.has('ShiftRight') || Math.hypot(walkInput.x, walkInput.y) > 0.92;
 
     if (free) {
       const speed = FLY_SPEED * (run ? 2.5 : 1);
@@ -180,6 +205,7 @@ export function WalkController() {
       let vy = fwd * Math.sin(s.pitch);
       if (k.has('Space') || k.has('KeyE')) vy += 1;
       if (k.has('KeyQ') || k.has('ControlLeft') || k.has('KeyC')) vy -= 1;
+      vy += walkInput.up;
       s.y = Math.max(0.2, s.y + vy * speed * dt);
     } else {
       const speed = run ? RUN_SPEED : WALK_SPEED;

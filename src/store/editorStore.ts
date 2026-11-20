@@ -9,6 +9,8 @@ export type ViewMode = '2d' | '3d' | 'walk';
 export type ToolId = 'select' | 'pan' | 'wall' | 'room-rect' | 'room-poly' | 'room-detect' | 'opening' | 'measure' | 'furniture';
 export type Screen = 'projects' | 'editor';
 export type LeftTab = 'tools' | 'library';
+/** Panel abierto en la interfaz compacta (móvil). */
+export type MobilePanel = 'none' | 'tools' | 'library' | 'props';
 
 export interface Viewport2D {
   /** Centro visible en coordenadas del plano (m). */
@@ -69,7 +71,9 @@ interface EditorState {
   /** Petición de cámara 3D. */
   cameraRequest: { mode: 'exterior' | 'top' | 'interior'; n: number };
   walkFreeCamera: boolean;
+  mobilePanel: MobilePanel;
 
+  setMobilePanel: (p: MobilePanel) => void;
   setScreen: (s: Screen) => void;
   setView: (v: ViewMode) => void;
   setTool: (t: ToolId) => void;
@@ -134,7 +138,9 @@ export const useEditorStore = create<EditorState>()((set) => ({
   fitRequest: 0,
   cameraRequest: { mode: 'exterior', n: 0 },
   walkFreeCamera: false,
+  mobilePanel: 'none',
 
+  setMobilePanel: (mobilePanel) => set({ mobilePanel }),
   setScreen: (screen) => set({ screen }),
   setView: (view) => set({ view, hover: null }),
   setTool: (tool) => set((s) => ({ tool, placingCatalogId: tool === 'furniture' ? s.placingCatalogId : null, liveMeasure: null })),

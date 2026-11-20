@@ -4,11 +4,10 @@ import { computeFootprints } from '@/modules/Walls/geometry';
 import type { ID, ProjectDoc } from '@/modules/FloorPlan/types';
 import { useWalkStore, walkRequests } from './walkStore';
 
-const SIZE = 210;
 const pts = (p: Vec2[]) => p.map((q) => `${q.x},${q.y}`).join(' ');
 
 /** Minimapa de la planta con la posición y la dirección del visitante. Clic para teletransportarse. */
-export function Minimap({ doc, levelId }: { doc: ProjectDoc; levelId: ID }) {
+export function Minimap({ doc, levelId, size = 210 }: { doc: ProjectDoc; levelId: ID; size?: number }) {
   const { x, z, yaw } = useWalkStore();
   const data = useMemo(() => {
     const walls = Object.values(doc.walls).filter((w) => w.levelId === levelId);
@@ -28,8 +27,8 @@ export function Minimap({ doc, levelId }: { doc: ProjectDoc; levelId: ID }) {
   const s = Math.max(w, h) / 30;
   return (
     <svg
-      width={SIZE}
-      height={SIZE}
+      width={size}
+      height={size}
       viewBox={`${box.minX} ${box.minY} ${w} ${h}`}
       preserveAspectRatio="xMidYMid meet"
       className="cursor-crosshair"
