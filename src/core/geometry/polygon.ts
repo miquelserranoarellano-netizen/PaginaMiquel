@@ -131,7 +131,7 @@ export function insetPolygon(points: readonly Vec2[], distances: readonly number
     const inward = scale(perp(d), orientation);
     return { p: add(p, scale(inward, distances[i] ?? 0)), d };
   });
-  return points.map((p, i) => {
+  return points.map((_p, i) => {
     const prev = lines[(i - 1 + n) % n];
     const cur = lines[i];
     return lineIntersection(prev.p, prev.d, cur.p, cur.d) ?? cur.p;
