@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { labelPoint, polygonArea } from '@/core/geometry';
+import { bboxOf, labelPoint, polygonArea } from '@/core/geometry';
 import { formatArea } from '@/core/units';
 import type { Room } from '@/modules/FloorPlan/types';
 
@@ -21,9 +21,11 @@ export const RoomLabels = memo(function RoomLabels({ rooms, zoom }: { rooms: Roo
       {rooms.map((r) => {
         const area = polygonArea(r.points);
         const lp = labelPoint(r.points);
-        const sizePx = Math.sqrt(area) * zoom;
-        if (sizePx < 34) return null;
-        const fs = 12 / zoom;
+        const b = bboxOf(r.points);
+        // El nombre se reduce para caber en la estancia (mín. 7 px en pantalla).
+        const fit = ((b.maxX - b.minX) * 0.9) / Math.max(4, r.name.length * 0.6);
+        const fs = Math.min(12 / zoom, fit, (b.maxY - b.minY) / 3.2);
+        if (fs * zoom < 7) return null;
         return (
           <g key={r.id} pointerEvents="none">
             <text x={lp.x} y={lp.y - fs * 0.55} fontSize={fs} fontWeight={600} textAnchor="middle" fill="#1e293b" stroke="#ffffff" strokeOpacity={0.85} strokeWidth={3 / zoom} paintOrder="stroke">

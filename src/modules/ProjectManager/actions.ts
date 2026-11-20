@@ -52,6 +52,12 @@ export async function exportStoredProject(id: string): Promise<void> {
 export async function importProjectFile(): Promise<ProjectDoc | null> {
   const file = await pickFile([{ name: 'Proyecto HomeDesign', extensions: ['hdsp', 'json'] }], 'utf8');
   if (!file) return null;
+  return importProjectText(file.data);
+}
+
+/** Importa el contenido de un .hdsp (también usado al abrirlo desde el sistema). */
+export async function importProjectText(text: string): Promise<ProjectDoc | null> {
+  const file = { data: text };
   let parsed: unknown;
   try {
     parsed = JSON.parse(file.data);

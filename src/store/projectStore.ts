@@ -34,6 +34,16 @@ interface ProjectState {
   load: (doc: ProjectDoc) => void;
 }
 
+/**
+ * Las recetas se envuelven para ignorar su valor de retorno: así una función
+ * flecha como `(d) => (d.name = 'x')` nunca se interpreta como "documento nuevo".
+ */
+const run =
+  (recipe: Recipe) =>
+  (draft: Draft<ProjectDoc>): void => {
+    recipe(draft);
+  };
+
 function pushPast(past: ProjectDoc[], doc: ProjectDoc): ProjectDoc[] {
   const next = past.length >= HISTORY_LIMIT ? past.slice(past.length - HISTORY_LIMIT + 1) : past.slice();
   next.push(doc);
@@ -51,23 +61,23 @@ export const useProjectStore = create<ProjectState>()((set, get) => ({
     const { doc, past, gestureBase } = get();
     if (gestureBase) {
       // Durante un gesto los cambios puntuales se integran en el gesto.
-      const next = produce(doc, recipe);
-      if (next !== doc) set((s) => ({ doc: next, gestureBase: produce(s.gestureBase!, recipe), revision: s.revision + 1 }));
+      const next = produce(doc, run(recipe));
+      if (next !== doc) set((s) => ({ doc: next, gestureBase: produce(s.gestureBase!, run(recipe)), revision: s.revision + 1 }));
       return;
     }
-    const next = produce(doc, recipe);
+    const next = produce(doc, run(recipe));
     if (next === doc) return;
     set((s) => ({ doc: next, past: pushPast(past, doc), future: [], revision: s.revision + 1 }));
   },
 
   applySilently: (recipe) => {
     const { doc } = get();
-    const next = produce(doc, recipe);
+    const next = produce(doc, run(recipe));
     if (next === doc) return;
     set((s) => ({
       doc: next,
-      past: s.past.map((d) => produce(d, recipe)),
-      future: s.future.map((d) => produce(d, recipe)),
+      past: s.past.map((d) => produce(d, run(recipe))),
+      future: s.future.map((d) => produce(d, run(recipe))),
       revision: s.revision + 1,
     }));
   },
@@ -80,7 +90,7 @@ export const useProjectStore = create<ProjectState>()((set, get) => ({
   updateGesture: (recipe) => {
     const base = get().gestureBase;
     if (!base) return;
-    const next = produce(base, recipe);
+    const next = produce(base, run(recipe));
     set((s) => ({ doc: next, revision: s.revision + 1 }));
   },
 

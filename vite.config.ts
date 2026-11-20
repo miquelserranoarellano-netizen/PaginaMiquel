@@ -46,15 +46,7 @@ export default defineConfig(({ command }) => ({
   build: {
     target: 'es2022',
     chunkSizeWarningLimit: 2500,
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          three: ['three'],
-          r3f: ['@react-three/fiber', '@react-three/drei'],
-          pdf: ['jspdf'],
-        },
-      },
-    },
+    // El 3D (React Three Fiber) y el PDF se cargan bajo demanda mediante import() dinámico.
   },
   test: {
     environment: 'node',

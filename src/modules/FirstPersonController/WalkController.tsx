@@ -46,7 +46,7 @@ export function WalkController() {
     [openingsAll, walls, levelId],
   );
 
-  const st = useRef({ x: 0, z: 0, y: EYE_HEIGHT, yaw: 0, pitch: 0, vx: 0, vz: 0, vy: 0, bob: 0, keys: new Set<string>(), hudT: 0, dragging: false });
+  const st = useRef({ x: 0, z: 0, y: EYE_HEIGHT, yaw: 0, pitch: 0, vx: 0, vz: 0, vy: 0, bob: 0, keys: new Set<string>(), hudT: 0, dragging: false, skip: 0 });
 
   // Posición inicial y cambio de planta.
   useEffect(() => {
@@ -77,6 +77,12 @@ export function WalkController() {
     const dom = gl.domElement;
     const s = st.current;
     const look = (dx: number, dy: number) => {
+      // Chromium puede enviar saltos enormes justo al bloquear el ratón: se descartan.
+      if (s.skip > 0) {
+        s.skip--;
+        return;
+      }
+      if (Math.abs(dx) > 250 || Math.abs(dy) > 250) return;
       s.yaw -= dx * LOOK_SENS;
       s.pitch = Math.max(-1.5, Math.min(1.5, s.pitch - dy * LOOK_SENS));
     };
@@ -86,7 +92,11 @@ export function WalkController() {
         req?.catch?.(() => undefined);
       }
     };
-    const onLockChange = () => useWalkStore.getState().set({ locked: document.pointerLockElement === dom });
+    const onLockChange = () => {
+      const locked = document.pointerLockElement === dom;
+      if (locked) s.skip = 2;
+      useWalkStore.getState().set({ locked });
+    };
     const onMouseMove = (e: MouseEvent) => {
       if (document.pointerLockElement === dom) look(e.movementX, e.movementY);
       else if (s.dragging) look(e.movementX * 1.4, e.movementY * 1.4);

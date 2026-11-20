@@ -463,6 +463,8 @@ function toTexture(img: HTMLCanvasElement, def: MaterialDef, srgb: boolean): Tex
   t.repeat.set(1 / def.tileSize, 1 / def.tileSize);
   t.colorSpace = srgb ? SRGBColorSpace : LinearSRGBColorSpace;
   t.anisotropy = 8;
+  // Al exportar a GLB/GLTF las texturas de color se guardan en JPEG (mucho más ligeras).
+  if (srgb) t.userData.mimeType = 'image/jpeg';
   t.needsUpdate = true;
   return t;
 }

@@ -20,6 +20,8 @@ export interface HomeDesignDesktopApi {
     /** Abre un fichero elegido por el usuario. */
     open(options: { filters: DesktopFileFilter[]; encoding: 'utf8' | 'base64' }): Promise<{ name: string; data: string } | null>;
   };
+  takePendingFile(): Promise<{ name: string; data: string } | null>;
+  onFileAvailable(handler: () => void): void;
   onBeforeClose(handler: () => Promise<void>): void;
 }
 

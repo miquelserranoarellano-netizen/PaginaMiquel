@@ -129,6 +129,19 @@ export function installAutosave() {
       e.preventDefault();
     }
   });
+  const api = window.homeDesign;
+  if (api) {
+    const openPending = async () => {
+      const file = await api.takePendingFile();
+      if (!file) return;
+      const { importProjectText } = await import('./actions');
+      if (useEditorStore.getState().screen === 'editor') await saveNow();
+      const doc = await importProjectText(file.data);
+      if (doc) openDocument(doc, { alreadySaved: true });
+    };
+    void openPending();
+    api.onFileAvailable(() => void openPending());
+  }
   window.homeDesign?.onBeforeClose(async () => {
     if (useEditorStore.getState().screen === 'editor' && useSaveStore.getState().status !== 'saved') await saveNow();
   });
