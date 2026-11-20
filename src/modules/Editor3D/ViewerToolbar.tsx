@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
-import { Armchair, Building2, Eye, Home, Layers, Scissors, Sparkles, Trees, View } from 'lucide-react';
+import { Aperture, Armchair, Building2, Eye, Home, Layers, Scissors, Sparkles, Trees, View } from 'lucide-react';
+import { startRender, useRenderStore } from './renderStore';
 import { useEditorStore } from '@/store/editorStore';
 import { cx } from '@/modules/UI/controls';
 import { PresetButtons } from '@/modules/Lighting/LightingPanel';
@@ -28,6 +29,7 @@ export function ViewerToolbar() {
   const view3d = useEditorStore((s) => s.view3d);
   const setView3d = useEditorStore((s) => s.setView3d);
   const requestCamera = useEditorStore((s) => s.requestCamera);
+  const rendering = useRenderStore((s) => s.status !== 'off');
   return (
     <>
       <div className={cx('absolute flex items-center gap-0.5 overflow-x-auto rounded-lg border border-slate-200 bg-white/95 p-1 shadow-sm backdrop-blur', compact ? 'bottom-2 left-2 right-2 thin-scroll' : 'right-3 top-3')}>
@@ -52,6 +54,17 @@ export function ViewerToolbar() {
         </TB>
         <TB title="Mostrar muebles" active={view3d.showFurniture} onClick={() => setView3d({ showFurniture: !view3d.showFurniture })}>
           <Armchair size={14} />
+        </TB>
+        <div className="mx-1 h-5 w-px bg-slate-200" />
+        <TB
+          title="Render realista: luz rebotada, sombras suaves y reflejos (trazado de rayos). Mejora mientras la cámara está quieta."
+          active={rendering}
+          onClick={() => {
+            useEditorStore.getState().clearSelection();
+            startRender();
+          }}
+        >
+          <Aperture size={14} /> <L>Render realista</L>
         </TB>
       </div>
       <div className={cx('absolute flex items-center gap-0.5 rounded-lg border border-slate-200 bg-white/95 p-1 shadow-sm backdrop-blur', compact ? 'right-2 top-2' : 'left-3 top-[58px]')}>

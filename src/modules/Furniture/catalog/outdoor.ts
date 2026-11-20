@@ -43,14 +43,58 @@ export const OUTDOOR: CatalogItem[] = [
     w: 1.85,
     d: 4.5,
     h: 1.45,
-    slots: { primary: slot('Carrocería', 'lacado', '#b3261e'), secondary: slot('Lunas', 'vidrio', '#33424d'), tyres: METAL('#1b1b1c'), chrome: METAL('#c4c7cb', 'aluminio') },
+    slots: {
+      primary: slot('Carrocería', 'lacado', '#b3261e'),
+      // Lunas tintadas (opacas y con brillo, como se ven desde fuera)
+      secondary: slot('Lunas', 'lacado', '#1b232a'),
+      tyres: METAL('#1b1b1c'),
+      chrome: METAL('#c4c7cb', 'aluminio'),
+      trim: slot('Paragolpes y molduras', 'plastico', '#1f2022'),
+      lights: slot('Faros', 'lacado', '#f1f4f7'),
+      tail: slot('Pilotos', 'lacado', '#8e1414'),
+    },
     build: (w, d, h) => {
-      const wheelD = Math.min(0.68, h * 0.47);
-      const parts: Part[] = [R(0, 0.22, 0, w, h * 0.38, d, 'primary', 0.12), R(0, 0.22 + h * 0.36, -d * 0.05, w * 0.86, h * 0.36, d * 0.5, 'primary', 0.12), R(0, 0.22 + h * 0.38, -d * 0.05, w * 0.87, h * 0.28, d * 0.46, 'secondary', 0.1)];
-      for (const x of [-w / 2 + 0.12, w / 2 - 0.12])
-        for (const z of [-d * 0.32, d * 0.32]) {
-          parts.push(Cc(x, wheelD / 2, z, wheelD, 0.24, wheelD, 'tyres', [0, 0, H]));
-          parts.push({ ...Cc(x + Math.sign(x) * 0.121, wheelD / 2, z, wheelD * 0.6, 0.01, wheelD * 0.6, 'chrome', [0, 0, H]), noPlan: true });
+      // Ruedas, carrocería en dos alturas (bajos y cintura), habitáculo con
+      // parabrisas y luneta inclinados, techo, faros, pilotos y retrovisores.
+      const rW = Math.min(0.34, h * 0.24);
+      const body0 = 0.2;
+      const lowY = Math.max(0.5, h * 0.4);
+      const beltY = Math.max(0.66, h * 0.48);
+      const axleF = d / 2 - Math.min(0.9, d * 0.2);
+      const axleR = -d / 2 + Math.min(0.95, d * 0.21);
+      const cabinL = d * 0.52;
+      const cabinZ = -d * 0.05;
+      const roofL = cabinL * 0.5;
+      const roofZ = cabinZ - d * 0.02;
+      const gw = w * 0.82;
+      const parts: Part[] = [
+        // Bajos y cintura (capó y maletero algo más bajos que la línea de cintura)
+        R(0, body0, 0, w, lowY - body0, d, 'primary', 0.15),
+        R(0, lowY - 0.05, -d * 0.015, w * 0.97, beltY - lowY + 0.05, d * 0.86, 'primary', 0.12),
+        // Techo
+        R(0, h - 0.07, roofZ, gw - 0.02, 0.07, roofL + 0.06, 'primary', 0.03),
+        // Paragolpes y molduras inferiores
+        { ...R(0, body0 - 0.02, d / 2 - 0.09, w * 0.98, 0.2, 0.2, 'trim', 0.06), noPlan: true },
+        { ...R(0, body0 - 0.02, -d / 2 + 0.09, w * 0.98, 0.2, 0.2, 'trim', 0.06), noPlan: true },
+        { ...B(-w / 2 + 0.005, body0 + 0.02, 0, 0.02, 0.1, d * 0.62, 'trim'), noPlan: true },
+        { ...B(w / 2 - 0.005, body0 + 0.02, 0, 0.02, 0.1, d * 0.62, 'trim'), noPlan: true },
+        // Faros, calandra y pilotos
+        { ...B(-w * 0.32, lowY - 0.13, d / 2 - 0.02, 0.36, 0.09, 0.05, 'lights'), noPlan: true },
+        { ...B(w * 0.32, lowY - 0.13, d / 2 - 0.02, 0.36, 0.09, 0.05, 'lights'), noPlan: true },
+        { ...B(0, lowY - 0.24, d / 2 - 0.015, w * 0.34, 0.12, 0.04, 'trim'), noPlan: true },
+        { ...B(-w * 0.33, lowY - 0.1, -d / 2 + 0.02, 0.32, 0.08, 0.05, 'tail'), noPlan: true },
+        { ...B(w * 0.33, lowY - 0.1, -d / 2 + 0.02, 0.32, 0.08, 0.05, 'tail'), noPlan: true },
+        // Retrovisores
+        { ...R(-w / 2 - 0.05, beltY - 0.02, cabinZ + cabinL / 2 - 0.08, 0.12, 0.08, 0.06, 'primary', 0.02), noPlan: true },
+        { ...R(w / 2 + 0.05, beltY - 0.02, cabinZ + cabinL / 2 - 0.08, 0.12, 0.08, 0.06, 'primary', 0.02), noPlan: true },
+      ];
+      // Habitáculo acristalado: se estrecha hacia el techo (parabrisas y luneta inclinados).
+      const gh = h - 0.07 - (beltY - 0.03);
+      parts.push({ s: 'taper', p: [0, beltY - 0.03 + gh / 2, cabinZ], d: [gw, gh, cabinL], taper: [gw - 0.14, roofL + 0.04, roofZ - cabinZ], m: 'secondary', noPlan: true });
+      for (const x of [-w / 2 + 0.13, w / 2 - 0.13])
+        for (const z of [axleF, axleR]) {
+          parts.push(Cc(x, rW, z, rW * 2, 0.23, rW * 2, 'tyres', [0, 0, H]));
+          parts.push({ ...Cc(x + Math.sign(x) * 0.115, rW, z, rW * 1.25, 0.012, rW * 1.25, 'chrome', [0, 0, H]), noPlan: true });
         }
       return parts;
     },

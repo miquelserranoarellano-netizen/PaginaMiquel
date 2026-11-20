@@ -3,9 +3,9 @@ import type { CatalogItem, Part } from '../types';
 import { B, bed, FABRIC, LACQ, legs, R, slot, WOOD } from './parts';
 
 export const BEDS: CatalogItem[] = [
-  { id: 'bed-double', name: 'Cama doble 150', category: 'camas', w: 1.6, d: 2.05, h: 1.0, slots: { primary: slot('Edredón', 'tela', '#e6e1d8'), secondary: WOOD(), mattress: slot('Sábanas', 'colchon', '#f1eee8') }, build: bed },
-  { id: 'bed-king', name: 'Cama 180', category: 'camas', w: 1.9, d: 2.1, h: 1.05, slots: { primary: slot('Edredón', 'tela', '#b9c4cc'), secondary: FABRIC('#6f747a'), mattress: slot('Sábanas', 'colchon', '#f1eee8') }, build: bed },
-  { id: 'bed-single', name: 'Cama individual 90', category: 'camas', w: 0.95, d: 2.0, h: 0.9, slots: { primary: slot('Edredón', 'tela', '#9fb7a4'), secondary: WOOD('#d8b48a', 'madera-clara'), mattress: slot('Sábanas', 'colchon', '#f1eee8') }, build: bed },
+  { id: 'bed-double', name: 'Cama doble 150', category: 'camas', w: 1.6, d: 2.05, h: 1.0, slots: { primary: slot('Edredón', 'tela', '#e6e1d8'), secondary: WOOD(), mattress: slot('Sábanas', 'colchon', '#f1eee8'), accent: slot('Cojines y manta', 'tela', '#c9a45a') }, build: bed },
+  { id: 'bed-king', name: 'Cama 180', category: 'camas', w: 1.9, d: 2.1, h: 1.05, slots: { primary: slot('Edredón', 'tela', '#b9c4cc'), secondary: FABRIC('#6f747a'), mattress: slot('Sábanas', 'colchon', '#f1eee8'), accent: slot('Cojines y manta', 'tela', '#7d8f9c') }, build: bed },
+  { id: 'bed-single', name: 'Cama individual 90', category: 'camas', w: 0.95, d: 2.0, h: 0.9, slots: { primary: slot('Edredón', 'tela', '#9fb7a4'), secondary: WOOD('#d8b48a', 'madera-clara'), mattress: slot('Sábanas', 'colchon', '#f1eee8'), accent: slot('Cojines y manta', 'tela', '#d9b44a') }, build: bed },
   {
     id: 'crib',
     name: 'Cuna',

@@ -43,8 +43,9 @@ function presetFor(mode: 'exterior' | 'top' | 'interior', b: SceneBounds, studio
     return { pos, target };
   }
   // Vista alta desde delante a la izquierda, como una maqueta.
-  const dir = studio ? new Vector3(-0.72, 1.18, 1.05).normalize() : new Vector3(0.75, 0.8, 1.15).normalize();
-  return { pos: new Vector3(cx, cy, cz).addScaledVector(dir, b.radius * (studio ? 3.35 : 2.4)), target: new Vector3(cx, Math.min(1.2, cy), cz) };
+  // Estudio: unos 50° sobre el horizonte y girada, como una maqueta fotografiada.
+  const dir = studio ? new Vector3(-0.66, 1.42, 1.0).normalize() : new Vector3(0.75, 0.8, 1.15).normalize();
+  return { pos: new Vector3(cx, cy, cz).addScaledVector(dir, b.radius * (studio ? 3.2 : 2.4)), target: new Vector3(cx, Math.min(1.0, cy), cz) };
 }
 
 export function CameraRig({ bounds, studio }: { bounds: SceneBounds; studio: boolean }) {

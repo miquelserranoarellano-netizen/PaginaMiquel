@@ -35,6 +35,7 @@ export default defineConfig(({ command }) => ({
       '@react-three/postprocessing',
       'postprocessing',
       'three/examples/jsm/environments/RoomEnvironment.js',
+      'three-gpu-pathtracer',
       'three/examples/jsm/geometries/RoundedBoxGeometry.js',
       'three/examples/jsm/loaders/GLTFLoader.js',
       'three/examples/jsm/exporters/GLTFExporter.js',

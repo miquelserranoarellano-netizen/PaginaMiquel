@@ -35,7 +35,7 @@ function PartMesh({ part, item }: { part: Part; item: FurnitureItem }) {
 
 function CatalogModel({ item }: { item: FurnitureItem }) {
   const cat = getCatalogItem(item.catalogId);
-  const parts = useMemo(() => (cat ? cat.build(item.width, item.depth, item.height, resolveParams(cat, item.params)) : []), [cat, item.width, item.depth, item.height, item.params]);
+  const parts = useMemo(() => (cat ? cat.build(item.width, item.depth, item.height, resolveParams(cat, item.params)).filter((p) => !p.noMesh) : []), [cat, item.width, item.depth, item.height, item.params]);
   return (
     <>
       {parts.map((p, i) => (

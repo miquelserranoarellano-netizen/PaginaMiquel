@@ -32,8 +32,9 @@ guarda los proyectos en tu propio equipo.
 
 ### Modelo 3D
 - Conversión automática y en tiempo real del plano: muros con uniones a inglete y huecos reales, suelos, techos, puertas y ventanas integradas, muebles.
-- Dos estilos: **Estudio** (presentación de arquitectura sobre fondo gris, como una maqueta) y **Entorno** (cielo, terreno y jardín).
-- Acabado de calidad: oclusión ambiental (N8AO), sombras suaves, antialiasing SMAA y tone mapping ACES.
+- Dos estilos: **Estudio** (presentación de arquitectura sobre fondo gris carbón, como una maqueta fotografiada desde arriba, con la luz llegando desde detrás para que las sombras caigan hacia el espectador) y **Entorno** (cielo, terreno y jardín).
+- Acabado de calidad: oclusión ambiental (N8AO), **sombras suaves con penumbra realista (PCSS)**, antialiasing SMAA y tone mapping ACES; suelos de madera y piedra con barniz, lacados y porcelana con brillo, telas con brillo suave y cristal tintado con reflejos.
+- **Render realista** (botón en la barra del 3D): calcula la imagen por **trazado de rayos** —luz rebotada, sombras suaves y reflejos reales, como un render de arquitectura— y va mejorando mientras la cámara está quieta; *Guardar imagen* la descarga en PNG. En un ordenador o móvil con tarjeta gráfica tarda unos segundos en verse limpio.
 - Cámara orbital con vistas **exterior, cenital e interior** (gran angular); techos ocultables, vista de **maqueta** y visualización planta a planta.
 - Selección de muros, suelos, huecos y muebles para editar alturas, grosores, materiales y colores; los muebles se pueden arrastrar sobre el suelo.
 

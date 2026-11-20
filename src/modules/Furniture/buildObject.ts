@@ -10,6 +10,7 @@ export function buildCatalogObject(item: CatalogItem, w: number, d: number, h: n
   const g = new Group();
   g.name = item.name;
   for (const part of item.build(w, d, h, resolveParams(item, params))) {
+    if (part.noMesh) continue;
     const ref = materials[part.m] ?? item.slots[part.m] ?? { materialId: 'plastico', color: '#cccccc' };
     const { geometry, scale } = partGeometry(part);
     const mesh = new Mesh(geometry, getMaterial(ref));

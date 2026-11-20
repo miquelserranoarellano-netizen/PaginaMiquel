@@ -6,7 +6,7 @@ import type { SurfaceMaterial } from '@/modules/FloorPlan/types';
  * +d/2 = frente). Así se pueden redimensionar sin deformarse y generan
  * automáticamente su símbolo en planta.
  */
-export type PartShape = 'box' | 'rbox' | 'cyl' | 'sphere' | 'cone';
+export type PartShape = 'box' | 'rbox' | 'cyl' | 'sphere' | 'cone' | 'taper';
 
 export interface Part {
   s: PartShape;
@@ -20,8 +20,12 @@ export interface Part {
   m: string;
   /** Radio de redondeo (rbox). */
   radius?: number;
+  /** Tronco de pirámide (taper): ancho y fondo de la cara superior y desplazamiento en Z de su centro. */
+  taper?: [number, number, number];
   /** No dibujar en planta. */
   noPlan?: boolean;
+  /** Solo para el símbolo en planta (no se crea en 3D). */
+  noMesh?: boolean;
 }
 
 export type FurnitureCategory =

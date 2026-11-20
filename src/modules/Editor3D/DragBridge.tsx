@@ -14,7 +14,7 @@ export function DragBridge() {
         if (controls) (controls as unknown as { enabled: boolean }).enabled = v;
       },
     });
-    registerViewer({ camera, gl, scene });
+    registerViewer({ camera, gl, scene, controls: controls as never });
     return () => {
       registerDragContext(null);
       registerViewer(null);

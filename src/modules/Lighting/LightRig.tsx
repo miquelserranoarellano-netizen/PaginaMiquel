@@ -17,14 +17,15 @@ function studioBackground(night: boolean): Texture {
   const c = document.createElement('canvas');
   c.width = c.height = 512;
   const g = c.getContext('2d')!;
-  const grad = g.createRadialGradient(256, 210, 30, 256, 300, 420);
+  // Gris carbón con el centro algo más claro, como las presentaciones de archviz.
+  const grad = g.createRadialGradient(256, 200, 20, 256, 290, 430);
   if (night) {
     grad.addColorStop(0, '#3a3f49');
     grad.addColorStop(1, '#0f1116');
   } else {
-    grad.addColorStop(0, '#8a8d91');
-    grad.addColorStop(0.55, '#5f6266');
-    grad.addColorStop(1, '#2c2e31');
+    grad.addColorStop(0, '#6a6c70');
+    grad.addColorStop(0.45, '#4d4f53');
+    grad.addColorStop(1, '#232427');
   }
   g.fillStyle = grad;
   g.fillRect(0, 0, 512, 512);
@@ -39,7 +40,10 @@ export function LightRig({ lighting, bounds, style }: { lighting: LightingSettin
   const target = useRef<Object3D>(null);
   const night = isNight(lighting);
   const studio = style === 'estudio';
-  const dir = sunDirection(lighting);
+  // En estudio el sol se gira para la vista de maqueta: llega desde detrás a la derecha y
+  // las sombras caen hacia el espectador, como en un render de presentación. Los ajustes
+  // de orientación y altura siguen funcionando (se aplican sobre esa posición).
+  const dir = studio && !night ? sunDirection({ sunAzimuth: (lighting.sunAzimuth - 125 + 720) % 360, sunElevation: Math.min(75, Math.max(22, lighting.sunElevation - 12)) }) : sunDirection(lighting);
   const [cx, , cz] = bounds.center;
   const r = bounds.radius + 4;
 
@@ -59,7 +63,7 @@ export function LightRig({ lighting, bounds, style }: { lighting: LightingSettin
   useEffect(() => () => backdrop?.dispose(), [backdrop]);
 
   useEffect(() => {
-    scene.environmentIntensity = night ? 0.08 : studio ? 0.75 : 0.42;
+    scene.environmentIntensity = night ? 0.08 : studio ? 0.62 : 0.42;
     gl.toneMappingExposure = lighting.exposure * (night ? 1.15 : 1);
     scene.background = backdrop ?? (night ? new Color('#0b1324') : null);
   }, [gl, scene, night, studio, backdrop, lighting.exposure]);
@@ -69,10 +73,11 @@ export function LightRig({ lighting, bounds, style }: { lighting: LightingSettin
   });
 
   const sunPos = useMemo<[number, number, number]>(() => [cx + dir[0] * r * 2, Math.max(1, dir[1] * r * 2), cz + dir[2] * r * 2], [cx, cz, dir, r]);
-  const skyColor = night ? '#33415c' : studio ? '#ffffff' : '#cfe3ff';
-  const groundColor = night ? '#0c0f14' : studio ? '#9a9690' : '#8b7f6c';
+  const skyColor = night ? '#33415c' : studio ? '#fbfaf7' : '#cfe3ff';
+  const groundColor = night ? '#0c0f14' : studio ? '#a79c8d' : '#8b7f6c';
   const shadowSize = 4096;
-  const ambient = lighting.ambientIntensity * (studio && !night ? 1.25 : 1);
+  // En estudio el relleno es algo menor para que las sombras del sol se lean (como en un render).
+  const ambient = lighting.ambientIntensity * (studio && !night ? 1.05 : 1);
 
   return (
     <>
@@ -84,12 +89,12 @@ export function LightRig({ lighting, bounds, style }: { lighting: LightingSettin
       <directionalLight
         ref={sun}
         position={sunPos}
-        intensity={lighting.sunIntensity * (studio && !night ? 0.9 : 1)}
+        intensity={lighting.sunIntensity * (studio && !night ? 1.05 : 1)}
         color={lighting.sunColor}
         castShadow={lighting.shadows}
         shadow-mapSize={[shadowSize, shadowSize]}
-        shadow-bias={-0.0003}
-        shadow-normalBias={0.025}
+        shadow-bias={-0.00025}
+        shadow-normalBias={0.03}
         shadow-camera-left={-r}
         shadow-camera-right={r}
         shadow-camera-top={r}

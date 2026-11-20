@@ -4,6 +4,8 @@ export interface ViewerHandles {
   camera: Camera;
   gl: WebGLRenderer;
   scene: Scene;
+  /** Controles orbitales (en el modelo 3D; no en el recorrido). */
+  controls?: { target: { set(x: number, y: number, z: number): unknown }; update(): unknown; addEventListener?(type: string, fn: () => void): void; removeEventListener?(type: string, fn: () => void): void } | null;
 }
 
 let current: ViewerHandles | null = null;

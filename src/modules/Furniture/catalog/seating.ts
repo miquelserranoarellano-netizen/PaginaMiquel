@@ -1,11 +1,11 @@
 /** Sofás y sillas. */
 import type { CatalogItem } from '../types';
-import { B, C, FABRIC, legs, METAL, R, sofa, WOOD } from './parts';
+import { slot, B, C, FABRIC, legs, METAL, R, sofa, WOOD } from './parts';
 import type { V3 } from './parts';
 
 export const SEATING: CatalogItem[] = [
-  { id: 'sofa-3', name: 'Sofá 3 plazas', category: 'sofas', w: 2.2, d: 0.95, h: 0.85, slots: { primary: FABRIC(), secondary: WOOD('#5f3f29', 'madera-nogal') }, build: (w, d, h) => sofa(w, d, h, 3) },
-  { id: 'sofa-2', name: 'Sofá 2 plazas', category: 'sofas', w: 1.6, d: 0.92, h: 0.85, slots: { primary: FABRIC('#c9bba6'), secondary: WOOD('#5f3f29', 'madera-nogal') }, build: (w, d, h) => sofa(w, d, h, 2) },
+  { id: 'sofa-3', name: 'Sofá 3 plazas', category: 'sofas', w: 2.2, d: 0.95, h: 0.85, slots: { primary: FABRIC(), secondary: WOOD('#5f3f29', 'madera-nogal'), accent: slot('Cojines', 'tela', '#d9b44a') }, build: (w, d, h) => sofa(w, d, h, 3) },
+  { id: 'sofa-2', name: 'Sofá 2 plazas', category: 'sofas', w: 1.6, d: 0.92, h: 0.85, slots: { primary: FABRIC('#c9bba6'), secondary: WOOD('#5f3f29', 'madera-nogal'), accent: slot('Cojines', 'tela', '#7f8f80') }, build: (w, d, h) => sofa(w, d, h, 2) },
   {
     id: 'sofa-l',
     name: 'Sofá rinconera',
@@ -13,7 +13,7 @@ export const SEATING: CatalogItem[] = [
     w: 2.8,
     d: 1.7,
     h: 0.85,
-    slots: { primary: FABRIC('#6f747a'), secondary: METAL() },
+    slots: { primary: FABRIC('#6f747a'), secondary: METAL(), accent: slot('Cojines', 'tela', '#d9b44a') },
     build: (w, d, h) => {
       const main = Math.min(0.95, d * 0.6);
       const chaise = Math.min(0.95, w * 0.4);

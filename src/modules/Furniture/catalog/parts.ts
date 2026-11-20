@@ -38,43 +38,88 @@ export function legs(w: number, d: number, h: number, size: number, m: string, i
   return out;
 }
 
-export function sofa(w: number, d: number, h: number, seats: number): Part[] {
-  const arm = Math.min(0.2, w * 0.12);
+/**
+ * Rotación XYZ (la de Three.js) equivalente a inclinar `tilt` sobre el eje X y
+ * después girar `yaw` alrededor del eje vertical (hojas, ramas…).
+ */
+export function yawTilt(yaw: number, tilt: number): V3 {
+  const cy = Math.cos(yaw);
+  const sy = Math.sin(yaw);
+  const ct = Math.cos(tilt);
+  const st = Math.sin(tilt);
+  const m13 = sy * ct;
+  const ey = Math.asin(Math.max(-1, Math.min(1, m13)));
+  if (Math.abs(m13) < 0.9999999) return [Math.atan2(st, cy * ct), ey, Math.atan2(-sy * st, cy)];
+  return [Math.atan2(cy * st, ct), ey, 0];
+}
+
+/** Sofá con base, respaldo, brazos redondeados, cojines mullidos y cojines decorativos. */
+export function sofa(w: number, d: number, h: number, seats: number, pillows = seats >= 2 ? 2 : 0): Part[] {
+  const arm = Math.min(0.22, w * 0.13);
   const legH = 0.1;
-  const baseH = 0.3;
+  const baseH = 0.26;
   const backD = Math.min(0.22, d * 0.25);
   const inner = w - arm * 2;
+  const armH = Math.min(h - 0.12, 0.64);
   const parts: Part[] = [
-    R(0, legH, 0, w, baseH, d, 'primary', 0.03),
-    R(0, legH, -d / 2 + backD / 2, w, h - legH, backD, 'primary', 0.05),
-    R(-w / 2 + arm / 2, legH, 0.01, arm, Math.min(h, 0.62) - legH, d - 0.02, 'primary', 0.05),
-    R(w / 2 - arm / 2, legH, 0.01, arm, Math.min(h, 0.62) - legH, d - 0.02, 'primary', 0.05),
-    ...legs(w, d, legH, 0.05, 'secondary', 0.06, true),
+    R(0, legH, 0.02, w - 0.02, baseH, d - 0.04, 'primary', 0.04),
+    R(0, legH, -d / 2 + backD / 2, w, h - legH, backD, 'primary', 0.07),
+    R(-w / 2 + arm / 2, legH, 0.01, arm, armH - legH, d - 0.02, 'primary', Math.min(0.09, arm / 2 - 0.005)),
+    R(w / 2 - arm / 2, legH, 0.01, arm, armH - legH, d - 0.02, 'primary', Math.min(0.09, arm / 2 - 0.005)),
+    ...legs(w, d, legH, 0.045, 'secondary', 0.07, true),
   ];
   const cw = inner / seats;
+  const seatTop = legH + baseH;
   for (let i = 0; i < seats; i++) {
     const x = -inner / 2 + cw * (i + 0.5);
-    parts.push(R(x, legH + baseH, backD / 2, cw - 0.02, 0.14, d - backD - 0.02, 'primary', 0.05));
-    parts.push(R(x, legH + baseH + 0.1, -d / 2 + backD + 0.08, cw - 0.04, Math.max(0.2, h - legH - baseH - 0.14), 0.16, 'primary', 0.06, [-0.12, 0, 0]));
+    // Asiento mullido y respaldo algo inclinado
+    parts.push(R(x, seatTop - 0.01, backD / 2 + 0.01, cw - 0.015, 0.16, d - backD - 0.02, 'primary', 0.07));
+    parts.push(R(x, seatTop + 0.1, -d / 2 + backD + 0.09, cw - 0.03, Math.max(0.22, h - seatTop - 0.12), 0.18, 'primary', 0.08, [-0.16, 0, 0]));
+  }
+  // Cojines decorativos en los extremos
+  for (let i = 0; i < pillows; i++) {
+    const side = i % 2 === 0 ? -1 : 1;
+    const x = side * (inner / 2 - 0.24);
+    parts.push({ ...R(x, seatTop + 0.11, -d / 2 + backD + 0.2, 0.42, 0.4, 0.14, 'accent', 0.07, [-0.28, side * 0.25, 0]), noPlan: true });
   }
   return parts;
 }
 
+/** Cama con base, cabecero, colchón, edredón con caída, embozo, almohadas, cojines y manta. */
 export function bed(w: number, d: number, h: number): Part[] {
-  const frameH = 0.32;
+  const frameH = 0.3;
   const mattH = 0.24;
   const head = 0.08;
+  const top = frameH + mattH;
+  const len = d - head;
+  const zc = head / 2;
   const pillows = w > 1.2 ? 2 : 1;
+  const duvetStart = -d / 2 + head + 0.5;
+  const duvetEnd = d / 2 + 0.015;
   const parts: Part[] = [
-    R(0, 0.06, head / 2, w, frameH - 0.06, d - head, 'secondary', 0.02),
-    R(0, 0, -d / 2 + head / 2, w + 0.04, h, head, 'secondary', 0.02),
-    ...legs(w, d - head, 0.06, 0.06, 'secondary', 0.03).map((p) => ({ ...p, p: [p.p[0], p.p[1], p.p[2] + head / 2] as V3 })),
-    R(0, frameH, head / 2 + 0.01, w - 0.06, mattH, d - head - 0.04, 'mattress', 0.05),
-    R(0, frameH + mattH - 0.03, head / 2 + (d - head) * 0.18, w - 0.02, 0.08, (d - head) * 0.66, 'primary', 0.04),
+    R(0, 0.06, zc, w, frameH - 0.06, len, 'secondary', 0.02),
+    R(0, 0, -d / 2 + head / 2, w + 0.04, h, head, 'secondary', 0.03),
+    ...legs(w, len, 0.06, 0.06, 'secondary', 0.03).map((p) => ({ ...p, p: [p.p[0], p.p[1], p.p[2] + zc] as V3 })),
+    R(0, frameH, zc + 0.01, w - 0.06, mattH, len - 0.04, 'mattress', 0.07),
+    // Edredón: cubre el colchón y cae por los lados y los pies
+    R(0, top - 0.11, (duvetStart + duvetEnd) / 2, w + 0.03, 0.14, duvetEnd - duvetStart, 'primary', 0.06),
+    // Embozo de la sábana vuelto sobre el edredón
+    { ...R(0, top + 0.02, duvetStart + 0.1, w - 0.01, 0.035, 0.2, 'mattress', 0.016), noPlan: true },
+    // Manta a los pies, con caída
+    { ...R(0, top + 0.025, d / 2 - 0.3, w + 0.05, 0.03, 0.44, 'accent', 0.012), noPlan: true },
+    { ...B(0, top - 0.24, d / 2 + 0.018, w * 0.94, 0.27, 0.02, 'accent'), noPlan: true },
   ];
-  const pw = (w - 0.2) / pillows;
+  const pw = (w - 0.16) / pillows;
+  const zP = -d / 2 + head + 0.24;
   for (let i = 0; i < pillows; i++) {
-    parts.push(R(-((w - 0.2) / 2) + pw * (i + 0.5), frameH + mattH, -d / 2 + head + 0.22, pw - 0.06, 0.12, 0.36, 'mattress', 0.05));
+    const x = -((w - 0.16) / 2) + pw * (i + 0.5);
+    parts.push({ ...R(x, top - 0.02, zP, pw - 0.05, 0.17, 0.4, 'mattress', 0.075, [-0.38, 0, 0]), noPlan: true });
+  }
+  // Cojines decorativos delante de las almohadas
+  const cushions = w > 1.2 ? 2 : 1;
+  for (let i = 0; i < cushions; i++) {
+    const x = cushions === 1 ? 0 : (i === 0 ? -1 : 1) * Math.min(0.26, w * 0.17);
+    parts.push({ ...R(x, top + 0.03, zP + 0.2, 0.42, 0.32, 0.12, 'accent', 0.06, [-0.48, i === 0 ? 0.12 : -0.12, 0]), noPlan: true });
   }
   return parts;
 }
@@ -118,16 +163,43 @@ export function kitchenBase(w: number, d: number, h: number, extra: Part[] = [],
   return parts.concat(extra);
 }
 
+/**
+ * Planta en maceta con hojas alargadas que se abren y caen hacia fuera
+ * (disposición en espiral con el ángulo áureo). En planta se dibuja la copa.
+ */
 export function plantParts(w: number, h: number, potH: number): Part[] {
   const potD = Math.min(w * 0.55, 0.45);
-  return [
-    C(0, 0, 0, potD, potH, potD, 'secondary'),
-    C(0, potH - 0.03, 0, potD * 0.9, 0.03, potD * 0.9, 'soil'),
-    C(0, potH, 0, 0.03, (h - potH) * 0.5, 0.03, 'trunk'),
-    S(0, potH + (h - potH) * 0.55, 0, w * 0.8, (h - potH) * 0.65, w * 0.8, 'primary'),
-    S(w * 0.15, potH + (h - potH) * 0.75, -w * 0.08, w * 0.55, (h - potH) * 0.45, w * 0.55, 'primary'),
-    S(-w * 0.14, potH + (h - potH) * 0.4, w * 0.1, w * 0.5, (h - potH) * 0.4, w * 0.5, 'primary'),
+  const foliage = Math.max(0.1, h - potH);
+  const parts: Part[] = [
+    R(0, 0, 0, potD, potH, potD, 'secondary', Math.min(0.03, potD * 0.12)),
+    C(0, potH - 0.025, 0, potD * 0.9, 0.025, potD * 0.9, 'soil'),
+    { ...S(0, potH + foliage * 0.55, 0, w, foliage * 0.8, w, 'primary'), noMesh: true },
   ];
+  if (foliage > 0.5) parts.push({ ...C(0, potH, 0, 0.035, foliage * 0.45, 0.035, 'trunk'), noPlan: true });
+  const n = Math.round(Math.min(36, Math.max(12, foliage * 28)));
+  let seed = 1234567;
+  const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  for (let i = 0; i < n; i++) {
+    const t = i / (n - 1);
+    const yaw = i * 2.39996 + (rnd() - 0.5) * 0.4;
+    // Las hojas interiores suben casi rectas; las exteriores se abren y caen.
+    const tilt = -1.2 + t * 1.35 + (rnd() - 0.5) * 0.25;
+    const len = Math.min(w * 0.75, foliage * (0.42 + rnd() * 0.22));
+    const wid = len * (0.26 + rnd() * 0.08);
+    const baseY = potH + foliage * (0.12 + (1 - t) * 0.42 + rnd() * 0.1);
+    const ct = Math.cos(tilt);
+    const dir: V3 = [Math.sin(yaw) * ct, -Math.sin(tilt), Math.cos(yaw) * ct];
+    const r0 = 0.02 + t * w * 0.08;
+    parts.push({
+      s: 'sphere',
+      p: [Math.sin(yaw) * r0 + (dir[0] * len) / 2, baseY + (dir[1] * len) / 2, Math.cos(yaw) * r0 + (dir[2] * len) / 2],
+      d: [wid, Math.max(0.006, len * 0.035), len],
+      m: 'primary',
+      r: yawTilt(yaw, tilt),
+      noPlan: true,
+    });
+  }
+  return parts;
 }
 
 export function books(w: number, y: number, z: number, depth: number, height: number, seed: number): Part[] {

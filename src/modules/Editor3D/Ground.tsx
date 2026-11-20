@@ -25,7 +25,7 @@ export function Ground({ settings, bounds, style }: { settings: ProjectSettings;
   if (style === 'estudio') {
     return (
       <mesh geometry={geo} position={[cx, -0.03, cz]} receiveShadow name="terreno" userData={{ helper: true }}>
-        <shadowMaterial transparent opacity={0.45} color="#0c0d10" />
+        <shadowMaterial transparent opacity={0.62} color="#0a0b0d" />
       </mesh>
     );
   }

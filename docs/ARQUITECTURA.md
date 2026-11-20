@@ -197,6 +197,15 @@ trazado de muros se hace en 2D (es donde se puede dibujar con precisión).
   un estilo *Entorno* (cielo y terreno). Un `EffectComposer` aplica oclusión
   ambiental N8AO, SMAA y tone mapping ACES; se puede desactivar ("Calidad alta")
   en equipos modestos.
+* **D10 – Render realista por trazado de rayos.** `Editor3D/PathTraceRenderer.tsx`
+  usa `three-gpu-pathtracer` (carga bajo demanda) sobre la misma escena del visor.
+  Antes de construir el BVH prepara la escena y lo deshace al salir: divide las
+  mallas con varios materiales (los muros) en una por material —la librería no
+  admite grupos de materiales—, quita los mapas de relieve (no los usa y ocupan
+  capas de textura), oculta lo que no sabe dibujar (material de sombras, cielo
+  procedural, luces hemisférica/ambiente), añade un suelo mate en estudio y usa el
+  `RoomEnvironment` como cubo de entorno (no lee PMREM). Las texturas se empaquetan
+  a 512 px. Cualquier cambio del proyecto o de la vista termina el render.
 * **D9 – Carga bajo demanda.** El arranque no incluye three.js: el visor 3D, el
   renderizador de miniaturas, el importador GLB, jsPDF, el exportador GLTF y el
   cliente de Supabase son *chunks* dinámicos. Las texturas se dibujan en canvas

@@ -1,8 +1,9 @@
 /**
  * Visor 3D (modelo orbital y recorrido interior). Se carga bajo demanda.
  */
-import { Suspense, useMemo } from 'react';
+import { Suspense, useEffect, useMemo } from 'react';
 import { Canvas } from '@react-three/fiber';
+import { SoftShadows } from '@react-three/drei';
 import { PCFSoftShadowMap, Plane, Raycaster, Vector2, Vector3 } from 'three';
 import { useEditorStore } from '@/store/editorStore';
 import { useProjectStore } from '@/store/projectStore';
@@ -19,6 +20,9 @@ import { ViewerToolbar } from './ViewerToolbar';
 import { PostFX } from './PostFX';
 import { sceneBounds } from './sceneBounds';
 import { getViewer } from './viewerRef';
+import { PathTraceRenderer } from './PathTraceRenderer';
+import { RenderOverlay } from './RenderOverlay';
+import { stopRender, useRenderStore } from './renderStore';
 
 export default function Viewer3D() {
   const view = useEditorStore((s) => s.view);
@@ -34,6 +38,12 @@ export default function Viewer3D() {
   // En el recorrido siempre se ve el exterior real (cielo y jardín a través de las ventanas).
   const style = mode === 'walk' ? 'exterior' : view3d.style;
   const hq = view3d.quality === 'alta';
+  const rendering = useRenderStore((s) => s.status !== 'off');
+  // Cualquier cambio en el proyecto o en la vista termina el render (la escena ya no es la misma).
+  useEffect(() => {
+    if (useRenderStore.getState().status !== 'off') stopRender();
+  }, [doc, view3d, mode]);
+  useEffect(() => () => stopRender(), []);
 
   const onDrop = (e: React.DragEvent) => {
     const id = e.dataTransfer.getData(DRAG_MIME);
@@ -53,7 +63,7 @@ export default function Viewer3D() {
 
   return (
     <div
-      className="relative h-full w-full bg-[#4a4c50]"
+      className="relative h-full w-full bg-[#3a3c3f]"
       onDragOver={(e) => {
         if (e.dataTransfer.types.includes(DRAG_MIME)) {
           e.preventDefault();
@@ -80,10 +90,13 @@ export default function Viewer3D() {
           <HouseModel mode={mode} />
         </Suspense>
         {mode === '3d' ? <CameraRig key="orbit" bounds={bounds} studio={style === 'estudio'} /> : <WalkController key="walk" />}
-        {hq && <PostFX studio={style === 'estudio'} walk={mode === 'walk'} />}
+        {hq && doc.lighting.shadows && <SoftShadows size={32} samples={12} focus={0.35} />}
+        {hq && !rendering && <PostFX studio={style === 'estudio'} walk={mode === 'walk'} />}
+        {rendering && mode === '3d' && <PathTraceRenderer style={style} bounds={bounds} />}
         <DragBridge />
       </Canvas>
       {mode === '3d' ? <ViewerToolbar /> : <WalkHud />}
+      {mode === '3d' && <RenderOverlay studio={style === 'estudio'} />}
     </div>
   );
 }

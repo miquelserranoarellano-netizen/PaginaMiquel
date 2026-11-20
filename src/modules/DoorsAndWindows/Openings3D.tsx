@@ -81,7 +81,7 @@ function OpeningBody({ o, wall, clipY }: { o: Opening; wall: Wall; clipY?: numbe
   const frame = getMaterial(o.frame, mo);
   const panel = getMaterial(o.panel, mo);
   const metal = getMaterial({ materialId: 'acero', color: '#a7adb3' }, mo);
-  const glass = getMaterial({ materialId: 'vidrio', color: '#cfe5ee' }, mo);
+  const glass = getMaterial({ materialId: 'vidrio', color: '#7f97a3' }, mo);
   const stone = getMaterial({ materialId: 'marmol-blanco', color: '#e7e4de' }, mo);
   const t = wall.thickness;
   const depth = t + 0.02;
