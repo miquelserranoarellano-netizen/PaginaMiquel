@@ -12,6 +12,7 @@ import { useEditorStore } from '@/store/editorStore';
 import { projectApi, useProjectStore } from '@/store/projectStore';
 import { Button, Field, NumberField, Section, Stat, TextField, Toggle } from './controls';
 import { toast } from './toast';
+import { dialog } from './dialog';
 
 export function NoSelectionPanel() {
   const doc = useProjectStore((s) => s.doc);
@@ -96,8 +97,9 @@ export function NoSelectionPanel() {
             <Button
               variant="danger"
               className="w-full"
-              onClick={() => {
-                if (!window.confirm(`¿Eliminar "${level.name}" y todo su contenido?`)) return;
+              onClick={async () => {
+                const sure = await dialog.confirm({ title: `¿Eliminar "${level.name}"?`, message: 'Se borrarán todos sus muros, estancias y muebles. Puedes deshacerlo con Ctrl+Z.', confirmText: 'Eliminar planta', danger: true });
+                if (!sure) return;
                 let ok = false;
                 projectApi.apply((d) => {
                   ok = removeLevel(d, levelId);

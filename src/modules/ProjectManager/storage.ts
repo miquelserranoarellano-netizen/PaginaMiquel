@@ -58,10 +58,74 @@ function desktopAdapter(): StorageAdapter {
   };
 }
 
+/** Almacenamiento en memoria: último recurso cuando el navegador no deja guardar. */
+function memoryAdapter(): StorageAdapter {
+  const docs = new Map<string, string>();
+  const metas = new Map<string, ProjectMeta>();
+  return {
+    kind: 'browser',
+    async list() {
+      return [...metas.values()];
+    },
+    async load(id) {
+      const raw = docs.get(id);
+      if (!raw) throw new Error('No se ha encontrado el proyecto');
+      return JSON.parse(raw);
+    },
+    async save(doc, meta) {
+      docs.set(doc.id, JSON.stringify(doc));
+      metas.set(doc.id, meta);
+    },
+    async remove(id) {
+      docs.delete(id);
+      metas.delete(id);
+    },
+  };
+}
+
+/** Comprueba que IndexedDB funciona (puede estar bloqueado en ventanas privadas o marcos). */
+async function probeBrowser(a: StorageAdapter): Promise<boolean> {
+  try {
+    const timeout = new Promise<never>((_, rej) => setTimeout(() => rej(new Error('timeout')), 2500));
+    await Promise.race([a.list(), timeout]);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 let adapter: StorageAdapter | null = null;
+let volatile = false;
+
+/** true si los proyectos solo se guardan en memoria (se pierden al cerrar). */
+export const isVolatileStorage = (): boolean => volatile;
 
 export function getStorage(): StorageAdapter {
-  if (!adapter) adapter = typeof window !== 'undefined' && window.homeDesign?.isDesktop ? desktopAdapter() : browserAdapter();
+  if (adapter) return adapter;
+  if (typeof window !== 'undefined' && window.homeDesign?.isDesktop) {
+    adapter = desktopAdapter();
+    return adapter;
+  }
+  // Se decide de forma perezosa: IndexedDB si responde, si no memoria.
+  let chosen: Promise<StorageAdapter> | null = null;
+  const pick = () =>
+    (chosen ??= (async () => {
+      try {
+        const b = browserAdapter();
+        if (await probeBrowser(b)) return b;
+      } catch {
+        /* sin IndexedDB */
+      }
+      volatile = true;
+      return memoryAdapter();
+    })());
+  adapter = {
+    kind: 'browser',
+    list: async () => (await pick()).list(),
+    load: async (id) => (await pick()).load(id),
+    save: async (doc, meta) => (await pick()).save(doc, meta),
+    remove: async (id) => (await pick()).remove(id),
+  };
   return adapter;
 }
 

@@ -3,6 +3,7 @@ import { Copy, Download, FolderOpen, Home, MoreHorizontal, Pencil, Plus, Trash2,
 import { formatArea } from '@/core/units';
 import type { ProjectMeta } from '@/modules/FloorPlan/types';
 import { Button } from '@/modules/UI/controls';
+import { dialog } from '@/modules/UI/dialog';
 import { toast } from '@/modules/UI/toast';
 import { createProject, deleteProject, duplicateProject, exportStoredProject, importProjectFile, listProjects, renameProject } from './actions';
 import { openDocument, openProjectById } from './persistence';
@@ -48,7 +49,7 @@ function ProjectCard({ meta, onChanged }: { meta: ProjectMeta; onChanged: () => 
             type="button"
             className="flex w-full items-center gap-2 px-3 py-2 hover:bg-slate-50"
             onClick={run(async () => {
-              const name = window.prompt('Nuevo nombre del proyecto', meta.name)?.trim();
+              const name = await dialog.prompt({ title: 'Cambiar nombre', label: 'Nombre del proyecto', defaultValue: meta.name, confirmText: 'Guardar' });
               if (name) await renameProject(meta.id, name);
             })}
           >
@@ -64,7 +65,8 @@ function ProjectCard({ meta, onChanged }: { meta: ProjectMeta; onChanged: () => 
             type="button"
             className="flex w-full items-center gap-2 px-3 py-2 text-red-600 hover:bg-red-50"
             onClick={run(async () => {
-              if (window.confirm(`¿Eliminar definitivamente "${meta.name}"?`)) await deleteProject(meta.id);
+              const ok = await dialog.confirm({ title: `¿Eliminar "${meta.name}"?`, message: 'El proyecto se borrará de este equipo. Si quieres conservar una copia, expórtalo antes.', confirmText: 'Eliminar', danger: true });
+              if (ok) await deleteProject(meta.id);
             })}
           >
             <Trash2 size={14} /> Eliminar
@@ -113,8 +115,8 @@ export function ProjectsScreen() {
             </Button>
             <Button
               variant="primary"
-              onClick={() => {
-                const name = window.prompt('Nombre del nuevo proyecto', 'Mi casa')?.trim();
+              onClick={async () => {
+                const name = await dialog.prompt({ title: 'Nuevo proyecto', label: 'Nombre del proyecto', defaultValue: 'Mi casa', confirmText: 'Crear' });
                 if (name) void createProject(name);
               }}
             >
