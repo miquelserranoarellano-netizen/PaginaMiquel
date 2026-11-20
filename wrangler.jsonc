@@ -1,6 +1,10 @@
 // Despliegue en Cloudflare Workers: compila la app con Vite y publica la
 // carpeta dist como recursos estáticos. Las rutas /api/* las atiende el Worker
-// (worker/index.ts): cuentas de usuario y proyectos guardados en D1.
+// (worker/index.ts): cuentas de usuario y proyectos.
+//
+// Base de datos: Supabase si en Cloudflare (Settings → Variables and Secrets)
+// existen los secretos SUPABASE_URL y SUPABASE_SERVICE_KEY; si no, D1.
+// No escribas nunca la clave de Supabase en este fichero.
 // El nombre debe coincidir con el Worker conectado al repositorio en Cloudflare.
 {
   "name": "paginamiquel",
@@ -14,13 +18,15 @@
     "not_found_handling": "single-page-application",
     "run_worker_first": ["/api/*"]
   },
-  // Base de datos de cuentas y proyectos. Sin "database_id": Cloudflare la crea
-  // automáticamente en el primer despliegue (aprovisionamiento automático).
+  // Base de datos D1 (la que se usa sin Supabase; al pasar a Supabase las cuentas
+  // se copian solas al entrar). Sin "database_id": Cloudflare la crea sola.
   "d1_databases": [
     {
       "binding": "DB"
     }
   ],
+  // Conserva las variables añadidas en el panel de Cloudflare al desplegar.
+  "keep_vars": true,
   "vars": {
     // Pon "false" cuando ya hayas creado tus cuentas para cerrar el registro.
     "ALLOW_SIGNUP": "true",

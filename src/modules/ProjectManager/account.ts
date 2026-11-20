@@ -21,6 +21,10 @@ interface AccountState {
   username: string | null;
   /** Ha elegido seguir sin cuenta en esta visita. */
   guest: boolean;
+  /** Dónde guarda el servidor las cuentas ('supabase' o 'd1'). */
+  storage: string | null;
+  /** Problema de la base de datos del servidor (p. ej. faltan las tablas en Supabase). */
+  serverError: string | null;
   set: (p: Partial<Omit<AccountState, 'set'>>) => void;
 }
 
@@ -32,7 +36,7 @@ const readGuest = (): boolean => {
   }
 };
 
-export const useAccount = create<AccountState>()((set) => ({ available: null, signup: true, username: null, guest: readGuest(), set: (p) => set(p) }));
+export const useAccount = create<AccountState>()((set) => ({ available: null, signup: true, username: null, guest: readGuest(), storage: null, serverError: null, set: (p) => set(p) }));
 
 /** true en la web publicada (no dentro de Claude ni en la app de escritorio). */
 export const isWeb = (): boolean => typeof location !== 'undefined' && /^https?:$/.test(location.protocol) && !inClaude() && !window.homeDesign;
@@ -104,7 +108,7 @@ export async function initAccount(): Promise<void> {
   const st = useAccount.getState();
   if (!isWeb()) return st.set({ available: false });
   try {
-    const h = await api<{ accounts?: boolean; signup?: boolean }>('/api/health', { method: 'GET' }, 5000);
+    const h = await api<{ accounts?: boolean; signup?: boolean; storage?: string; error?: string }>('/api/health', { method: 'GET' }, 8000);
     if (!h.accounts) return st.set({ available: false });
     let username: string | null = null;
     if (token) {
@@ -114,7 +118,7 @@ export async function initAccount(): Promise<void> {
         /* sesión caducada o sin conexión: se pedirá entrar de nuevo */
       }
     }
-    st.set({ available: true, signup: h.signup !== false, username });
+    st.set({ available: true, signup: h.signup !== false, username, storage: h.storage ?? null, serverError: h.error ?? null });
   } catch {
     st.set({ available: false });
   }

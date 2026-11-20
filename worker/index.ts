@@ -1,5 +1,7 @@
 /**
- * API de cuentas y proyectos de HomeDesign Studio (Cloudflare Workers + D1).
+ * API de cuentas y proyectos de HomeDesign Studio (Cloudflare Workers).
+ * Guarda en Supabase si SUPABASE_URL y SUPABASE_SERVICE_KEY están configurados
+ * y, si no, en la base de datos D1 de Cloudflare (ver store.ts).
  *
  * Solo atiende /api/*; el resto lo sirven los recursos estáticos (dist).
  * Contraseñas con PBKDF2-SHA256 (100 000 iteraciones, sal aleatoria), sesiones
@@ -8,22 +10,15 @@
  * desde la app y se guardan troceados.
  */
 
-interface D1Result<T> {
-  results: T[];
-}
-interface D1PreparedStatement {
-  bind(...values: unknown[]): D1PreparedStatement;
-  first<T = Record<string, unknown>>(): Promise<T | null>;
-  all<T = Record<string, unknown>>(): Promise<D1Result<T>>;
-  run(): Promise<unknown>;
-}
-interface D1Database {
-  prepare(sql: string): D1PreparedStatement;
-  batch(statements: D1PreparedStatement[]): Promise<unknown[]>;
-  exec(sql: string): Promise<unknown>;
-}
+import { D1Store, type D1Database, type Store, StoreError, SupabaseStore, type StoredProject } from './store';
+
 interface Env {
-  DB: D1Database;
+  /** Base de datos D1 (se usa si Supabase no está configurado). */
+  DB?: D1Database;
+  /** URL del proyecto de Supabase (https://xxxx.supabase.co). */
+  SUPABASE_URL?: string;
+  /** Clave secreta de Supabase (service_role o sb_secret_…). Va como secreto en Cloudflare. */
+  SUPABASE_SERVICE_KEY?: string;
   /** "false" para cerrar el registro de cuentas nuevas. */
   ALLOW_SIGNUP?: string;
   /** Máximo de cuentas (20 por defecto). */
@@ -38,19 +33,11 @@ const MAX_PART = 1_000_000;
 const USERNAME = /^[A-Za-z0-9_.-]{3,32}$/;
 const PROJECT_ID = /^[A-Za-z0-9_-]{1,64}$/;
 
-const SCHEMA = [
-  `CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, username TEXT NOT NULL, password TEXT NOT NULL, created_at INTEGER NOT NULL)`,
-  `CREATE TABLE IF NOT EXISTS sessions (token_hash TEXT PRIMARY KEY, user_id TEXT NOT NULL, expires_at INTEGER NOT NULL)`,
-  `CREATE TABLE IF NOT EXISTS login_attempts (user_id TEXT PRIMARY KEY, fails INTEGER NOT NULL, locked_until INTEGER NOT NULL)`,
-  `CREATE TABLE IF NOT EXISTS projects (user_id TEXT NOT NULL, id TEXT NOT NULL, meta TEXT NOT NULL, version INTEGER NOT NULL, parts INTEGER NOT NULL, size INTEGER NOT NULL, updated_at INTEGER NOT NULL, PRIMARY KEY (user_id, id))`,
-  `CREATE TABLE IF NOT EXISTS project_parts (user_id TEXT NOT NULL, project_id TEXT NOT NULL, idx INTEGER NOT NULL, data TEXT NOT NULL, PRIMARY KEY (user_id, project_id, idx))`,
-];
-
-let schemaReady: Promise<void> | null = null;
-const ensureSchema = (db: D1Database) => (schemaReady ??= db.batch(SCHEMA.map((s) => db.prepare(s))).then(() => undefined).catch((e) => {
-  schemaReady = null;
-  throw e;
-}));
+function stores(env: Env): { store: Store; legacy: Store | null } {
+  if (env.SUPABASE_URL && env.SUPABASE_SERVICE_KEY) return { store: new SupabaseStore(env.SUPABASE_URL, env.SUPABASE_SERVICE_KEY), legacy: env.DB ? new D1Store(env.DB) : null };
+  if (env.DB) return { store: new D1Store(env.DB), legacy: null };
+  throw new HttpError(503, 'No hay base de datos configurada (Supabase o D1)');
+}
 
 class HttpError extends Error {
   constructor(public status: number, message: string) {
@@ -91,25 +78,20 @@ async function verifyPassword(password: string, stored: string): Promise<boolean
 
 const sha256 = async (s: string) => b64(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s)));
 
-async function newSession(env: Env, userId: string): Promise<string> {
+async function newSession(store: Store, userId: string): Promise<string> {
   const token = b64(crypto.getRandomValues(new Uint8Array(32))).replace(/[+/=]/g, (c) => ({ '+': '-', '/': '_', '=': '' })[c]!);
-  const now = Date.now();
-  await env.DB.batch([
-    env.DB.prepare('DELETE FROM sessions WHERE expires_at < ?').bind(now),
-    env.DB.prepare('INSERT INTO sessions (token_hash, user_id, expires_at) VALUES (?, ?, ?)').bind(await sha256(token), userId, now + SESSION_DAYS * 86_400_000),
-  ]);
+  await store.createSession(await sha256(token), userId, Date.now() + SESSION_DAYS * 86_400_000);
   return token;
 }
 
-async function currentUser(req: Request, env: Env): Promise<{ id: string; username: string; tokenHash: string }> {
+async function currentUser(req: Request, store: Store): Promise<{ id: string; username: string; tokenHash: string }> {
   const token = req.headers.get('authorization')?.replace(/^Bearer\s+/i, '');
   if (!token) throw new HttpError(401, 'Inicia sesión');
   const tokenHash = await sha256(token);
-  const row = await env.DB.prepare('SELECT u.id AS id, u.username AS username, s.expires_at AS exp FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.token_hash = ?')
-    .bind(tokenHash)
-    .first<{ id: string; username: string; exp: number }>();
-  if (!row || row.exp < Date.now()) throw new HttpError(401, 'La sesión ha caducado: vuelve a entrar');
-  return { id: row.id, username: row.username, tokenHash };
+  const session = await store.getSession(tokenHash);
+  const user = session && session.expires_at >= Date.now() ? await store.getUser(session.user_id) : null;
+  if (!user) throw new HttpError(401, 'La sesión ha caducado: vuelve a entrar');
+  return { id: user.id, username: user.username, tokenHash };
 }
 
 async function readJson<T>(req: Request): Promise<T> {
@@ -128,65 +110,71 @@ function credentials(body: { username?: unknown; password?: unknown }) {
   return { username, password, id: username.toLowerCase() };
 }
 
-async function register(req: Request, env: Env) {
-  if (env.ALLOW_SIGNUP === 'false') throw new HttpError(403, 'El registro de cuentas nuevas está cerrado');
-  const { username, password, id } = credentials(await readJson(req));
-  const count = (await env.DB.prepare('SELECT COUNT(*) AS n FROM users').first<{ n: number }>())?.n ?? 0;
-  if (count >= Number(env.MAX_USERS ?? 20)) throw new HttpError(403, 'No se admiten más cuentas en esta instalación');
-  if (await env.DB.prepare('SELECT 1 FROM users WHERE id = ?').bind(id).first()) throw new HttpError(409, 'Ese usuario ya existe: entra con tu contraseña');
-  await env.DB.batch([
-    env.DB.prepare('INSERT INTO users (id, username, password, created_at) VALUES (?, ?, ?, ?)').bind(id, username, await hashPassword(password), Date.now()),
-    env.DB.prepare('DELETE FROM login_attempts WHERE user_id = ?').bind(id),
-  ]);
-  return json({ token: await newSession(env, id), username });
+/**
+ * Si la cuenta existe en la base de datos anterior (D1) y la contraseña es
+ * correcta, la copia con sus proyectos al almacén actual (Supabase).
+ */
+async function migrateAccount(store: Store, legacy: Store | null, id: string, password: string) {
+  if (!legacy) return null;
+  const old = await legacy.getUser(id).catch(() => null);
+  if (!old || !(await verifyPassword(password, old.password))) return null;
+  await store.createUser(old);
+  for (const p of await legacy.exportProjects(id)) await store.saveProject(id, p);
+  return old;
 }
 
-async function login(req: Request, env: Env) {
+async function register(req: Request, env: Env, store: Store, legacy: Store | null) {
+  if (env.ALLOW_SIGNUP === 'false') throw new HttpError(403, 'El registro de cuentas nuevas está cerrado');
+  const { username, password, id } = credentials(await readJson(req));
+  const taken = new HttpError(409, 'Ese usuario ya existe: entra con tu contraseña');
+  if ((await store.getUser(id)) || (legacy && (await legacy.getUser(id).catch(() => null)))) throw taken;
+  if ((await store.countUsers()) >= Number(env.MAX_USERS ?? 20)) throw new HttpError(403, 'No se admiten más cuentas en esta instalación');
+  if (!(await store.createUser({ id, username, password: await hashPassword(password), created_at: Date.now() }))) throw taken;
+  await store.clearAttempts(id);
+  return json({ token: await newSession(store, id), username });
+}
+
+async function login(req: Request, env: Env, store: Store, legacy: Store | null) {
   const { username, password, id } = credentials(await readJson(req));
   const now = Date.now();
-  const user = await env.DB.prepare('SELECT id, username, password FROM users WHERE id = ?').bind(id).first<{ id: string; username: string; password: string }>();
+  let user = await store.getUser(id);
   if (!user) {
+    user = await migrateAccount(store, legacy, id, password);
+    if (user) {
+      await store.clearAttempts(id);
+      return json({ token: await newSession(store, user.id), username: user.username });
+    }
+    if (legacy && (await legacy.getUser(id).catch(() => null))) throw new HttpError(401, 'Contraseña incorrecta (distingue mayúsculas y minúsculas)');
     const signup = env.ALLOW_SIGNUP !== 'false';
     throw new HttpError(404, `No existe ninguna cuenta con el usuario «${username}».${signup ? ' Si es la primera vez, créala con «Crear cuenta».' : ''}`);
   }
-  const attempt = await env.DB.prepare('SELECT fails, locked_until FROM login_attempts WHERE user_id = ?').bind(id).first<{ fails: number; locked_until: number }>();
+  const attempt = await store.getAttempt(id);
   if (attempt && attempt.locked_until > now) {
     const min = Math.ceil((attempt.locked_until - now) / 60_000);
     throw new HttpError(429, `Demasiados intentos. Espera ${min} min y vuelve a probar`);
   }
-  const ok = await verifyPassword(password, user.password);
-  if (!ok) {
+  if (!(await verifyPassword(password, user.password))) {
     const fails = (attempt?.fails ?? 0) + 1;
     const lock = fails >= 5 ? now + Math.min(60, 2 ** (fails - 5) * 5) * 60_000 : 0;
-    await env.DB.prepare('INSERT INTO login_attempts (user_id, fails, locked_until) VALUES (?, ?, ?) ON CONFLICT(user_id) DO UPDATE SET fails = excluded.fails, locked_until = excluded.locked_until')
-      .bind(id, fails, lock)
-      .run();
+    await store.setAttempt(id, { fails, locked_until: lock });
     throw new HttpError(401, fails >= 5 ? 'Contraseña incorrecta. Por seguridad, espera unos minutos antes de volver a probar' : 'Contraseña incorrecta (distingue mayúsculas y minúsculas)');
   }
-  await env.DB.prepare('DELETE FROM login_attempts WHERE user_id = ?').bind(id).run();
-  return json({ token: await newSession(env, user.id), username: user.username });
+  await store.clearAttempts(id);
+  return json({ token: await newSession(store, user.id), username: user.username });
 }
 
-async function saveProject(req: Request, env: Env, userId: string, id: string) {
+async function saveProject(req: Request, store: Store, userId: string, id: string) {
   const body = await readJson<{ meta?: unknown; parts?: unknown; version?: unknown }>(req);
   const parts = body.parts;
   const version = Number(body.version);
   if (!Array.isArray(parts) || !parts.length || parts.some((p) => typeof p !== 'string' || p.length > MAX_PART) || !Number.isFinite(version)) throw new HttpError(400, 'Proyecto no válido');
-  const meta = JSON.stringify(body.meta ?? {});
-  if (meta.length > 400_000) throw new HttpError(400, 'Ficha del proyecto demasiado grande');
+  const meta = body.meta ?? {};
+  if (JSON.stringify(meta).length > 400_000) throw new HttpError(400, 'Ficha del proyecto demasiado grande');
   const size = (parts as string[]).reduce((s, p) => s + p.length, 0);
   if (size > MAX_PROJECT_BYTES) throw new HttpError(413, 'El proyecto es demasiado grande (quita modelos importados pesados)');
-  const used = (await env.DB.prepare('SELECT COALESCE(SUM(size), 0) AS s FROM projects WHERE user_id = ? AND id != ?').bind(userId, id).first<{ s: number }>())?.s ?? 0;
-  if (used + size > MAX_USER_BYTES) throw new HttpError(413, 'Has llenado el espacio de tu cuenta: borra algún proyecto');
-  const stmts: D1PreparedStatement[] = [env.DB.prepare('DELETE FROM project_parts WHERE user_id = ? AND project_id = ?').bind(userId, id)];
-  (parts as string[]).forEach((p, i) => stmts.push(env.DB.prepare('INSERT INTO project_parts (user_id, project_id, idx, data) VALUES (?, ?, ?, ?)').bind(userId, id, i, p)));
-  stmts.push(
-    env.DB.prepare(
-      'INSERT INTO projects (user_id, id, meta, version, parts, size, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?) ON CONFLICT(user_id, id) DO UPDATE SET meta = excluded.meta, version = excluded.version, parts = excluded.parts, size = excluded.size, updated_at = excluded.updated_at',
-    ).bind(userId, id, meta, version, parts.length, size, Date.now()),
-  );
-  // batch = transacción: o se guarda todo o nada.
-  await env.DB.batch(stmts);
+  if ((await store.usedBytes(userId, id)) + size > MAX_USER_BYTES) throw new HttpError(413, 'Has llenado el espacio de tu cuenta: borra algún proyecto');
+  const p: StoredProject = { id, meta, version, parts: parts as string[], size };
+  await store.saveProject(userId, p);
   return json({ ok: true });
 }
 
@@ -194,38 +182,38 @@ async function handle(req: Request, env: Env): Promise<Response> {
   const url = new URL(req.url);
   const path = url.pathname.replace(/\/+$/, '');
   const method = req.method.toUpperCase();
-  if (path === '/api/health') return json({ ok: true, accounts: true, signup: env.ALLOW_SIGNUP !== 'false' });
+  const { store, legacy } = stores(env);
+  if (path === '/api/health') {
+    let error: string | undefined;
+    try {
+      await store.check();
+    } catch (e) {
+      error = e instanceof Error ? e.message : String(e);
+    }
+    return json({ ok: !error, accounts: true, signup: env.ALLOW_SIGNUP !== 'false', storage: store.kind, ...(error ? { error } : {}) });
+  }
   if (method !== 'GET' && method !== 'HEAD' && req.headers.get('content-type')?.includes('application/json') !== true) throw new HttpError(415, 'Se esperaba JSON');
-  await ensureSchema(env.DB);
-  if (path === '/api/register' && method === 'POST') return register(req, env);
-  if (path === '/api/login' && method === 'POST') return login(req, env);
-  const user = await currentUser(req, env);
+  if (path === '/api/register' && method === 'POST') return register(req, env, store, legacy);
+  if (path === '/api/login' && method === 'POST') return login(req, env, store, legacy);
+  const user = await currentUser(req, store);
   if (path === '/api/me' && method === 'GET') return json({ username: user.username });
   if (path === '/api/logout' && method === 'POST') {
-    await env.DB.prepare('DELETE FROM sessions WHERE token_hash = ?').bind(user.tokenHash).run();
+    await store.deleteSession(user.tokenHash);
     return json({ ok: true });
   }
-  if (path === '/api/projects' && method === 'GET') {
-    const rows = await env.DB.prepare('SELECT meta FROM projects WHERE user_id = ? ORDER BY updated_at DESC').bind(user.id).all<{ meta: string }>();
-    return json(rows.results.map((r) => JSON.parse(r.meta)));
-  }
+  if (path === '/api/projects' && method === 'GET') return json(await store.listProjects(user.id));
   const m = /^\/api\/projects\/([^/]+)$/.exec(path);
   if (m) {
     const id = decodeURIComponent(m[1]);
     if (!PROJECT_ID.test(id)) throw new HttpError(400, 'Identificador no válido');
     if (method === 'GET') {
-      const p = await env.DB.prepare('SELECT version, parts FROM projects WHERE user_id = ? AND id = ?').bind(user.id, id).first<{ version: number; parts: number }>();
+      const p = await store.getProject(user.id, id);
       if (!p) throw new HttpError(404, 'No se ha encontrado el proyecto');
-      const rows = await env.DB.prepare('SELECT data FROM project_parts WHERE user_id = ? AND project_id = ? ORDER BY idx').bind(user.id, id).all<{ data: string }>();
-      if (rows.results.length !== p.parts) throw new HttpError(500, 'El proyecto guardado está incompleto');
-      return json({ version: p.version, parts: rows.results.map((r) => r.data) });
+      return json(p);
     }
-    if (method === 'PUT') return saveProject(req, env, user.id, id);
+    if (method === 'PUT') return saveProject(req, store, user.id, id);
     if (method === 'DELETE') {
-      await env.DB.batch([
-        env.DB.prepare('DELETE FROM project_parts WHERE user_id = ? AND project_id = ?').bind(user.id, id),
-        env.DB.prepare('DELETE FROM projects WHERE user_id = ? AND id = ?').bind(user.id, id),
-      ]);
+      await store.deleteProject(user.id, id);
       return json({ ok: true });
     }
   }
@@ -235,10 +223,9 @@ async function handle(req: Request, env: Env): Promise<Response> {
 export default {
   async fetch(req: Request, env: Env): Promise<Response> {
     try {
-      if (!env.DB) throw new HttpError(503, 'La base de datos no está configurada');
       return await handle(req, env);
     } catch (e) {
-      if (e instanceof HttpError) return json({ error: e.message }, e.status);
+      if (e instanceof HttpError || e instanceof StoreError) return json({ error: e.message }, e.status);
       console.error(e);
       return json({ error: 'Error del servidor' }, 500);
     }

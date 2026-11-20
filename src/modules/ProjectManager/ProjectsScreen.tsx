@@ -96,6 +96,7 @@ export function ProjectsScreen() {
   const cloudConfigured = useCloud((s) => !!s.config);
   const accounts = useAccount((s) => s.available);
   const username = useAccount((s) => s.username);
+  const accountStorage = useAccount((s) => s.storage);
   const location = useStorageLocation((s) => s.local);
   const refresh = useCallback(() => {
     if (!useCloud.getState().ready || useAccount.getState().available === null) return;
@@ -220,7 +221,7 @@ export function ProjectsScreen() {
         </section>
         <footer className={`mt-10 text-[11.5px] ${location === 'memory' ? 'text-amber-700' : 'text-slate-400'}`}>
           {username
-            ? `Los proyectos se guardan en tu cuenta (${username}): entra con tu usuario desde cualquier dispositivo para verlos.`
+            ? `Los proyectos se guardan en tu cuenta (${username})${accountStorage === 'supabase' ? ' en Supabase' : ''}: entra con tu usuario desde cualquier dispositivo para verlos.`
             : email
             ? `Los proyectos se guardan en tu cuenta de Supabase (${email}).`
             : location === 'claude'

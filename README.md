@@ -133,8 +133,8 @@ editando tus casas. Con la sesión iniciada todo se guarda automáticamente en t
 cuenta; *Subir a mi cuenta* copia los proyectos que ya tenías en ese dispositivo.
 
 - El servidor está en [`worker/index.ts`](worker/index.ts) (Cloudflare Workers) y
-  guarda cuentas y proyectos en una base de datos D1 que Cloudflare crea sola en
-  el primer despliegue.
+  guarda cuentas y proyectos en **Supabase** (si está configurado, ver abajo) o,
+  si no, en una base de datos D1 que Cloudflare crea sola.
 - Las contraseñas se guardan cifradas (PBKDF2), nunca en claro, y tras varios
   intentos fallidos el acceso se bloquea unos minutos.
 - Cuando hayas creado tus cuentas puedes cerrar el registro poniendo
@@ -144,7 +144,30 @@ cuenta; *Subir a mi cuenta* copia los proyectos que ya tenías en ese dispositiv
   servidores externos): allí los proyectos se guardan en tu cuenta de Claude.
   Para llevar uno a la web usa *Exportar (.hdsp)* e *Importar proyecto*.
 
-### Guardar en la nube (Supabase)
+#### Conectar las cuentas a Supabase
+
+1. En [supabase.com](https://supabase.com) crea un proyecto (*New project*; la
+   región *West EU* va bien desde España).
+2. Abre **SQL Editor → New query**, pega el contenido de
+   [`supabase/cuentas.sql`](supabase/cuentas.sql) y pulsa **Run**. Crea las
+   tablas `hd_users`, `hd_sessions`, `hd_login_attempts` y `hd_projects`, con
+   seguridad por filas activada para que la clave pública no pueda leerlas.
+3. Copia la **URL del proyecto** (*Project Settings → Data API*) y la **clave
+   secreta** (*Project Settings → API Keys*: la `service_role` o una *Secret key*
+   `sb_secret_…`). Esta clave no se comparte con nadie ni se pega en el chat.
+4. En Cloudflare → *Workers & Pages* → **paginamiquel** → *Settings* →
+   **Variables and Secrets** → *Add*: `SUPABASE_URL` con la URL y
+   `SUPABASE_SERVICE_KEY` con la clave secreta, las dos de tipo **Secret**.
+   Guarda (*Deploy*).
+5. Comprueba que en `https://<tu-web>/api/health` aparece `"storage":"supabase"`.
+   Las cuentas que ya existían se copian solas a Supabase (con sus casas) la
+   primera vez que entras con ellas. Las casas se ven en el *Table Editor*
+   (tabla `hd_projects`, columna `name`).
+
+### Guardar en la nube con Supabase Auth (escritorio, opcional)
+
+Alternativa con email y contraseña de Supabase Auth, pensada para la app de
+escritorio (en la web se usan las cuentas de arriba):
 
 1. Crea un proyecto gratuito en [supabase.com](https://supabase.com).
 2. En **SQL Editor** ejecuta [`supabase/schema.sql`](supabase/schema.sql): crea la

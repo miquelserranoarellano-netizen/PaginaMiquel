@@ -11,6 +11,7 @@ const input = 'h-12 w-full rounded-xl border border-slate-200 bg-white px-3.5 te
 
 export function LoginScreen() {
   const signup = useAccount((s) => s.signup);
+  const serverError = useAccount((s) => s.serverError);
   const [mode, setMode] = useState<'login' | 'signup'>('login');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -75,6 +76,7 @@ export function LoginScreen() {
               <input className={input} type={show ? 'text' : 'password'} value={password2} onChange={(e) => setPassword2(e.target.value)} autoComplete="new-password" />
             </label>
           )}
+          {serverError && !err && <p className="rounded-lg bg-amber-50 px-3 py-2 text-[12.5px] text-amber-900">{serverError}</p>}
           {err && <p className="text-[13px] text-red-600">{err}</p>}
           <button type="submit" disabled={busy} className="h-12 w-full rounded-xl bg-accent-600 text-[15px] font-semibold text-white shadow-sm transition hover:bg-accent-700 disabled:opacity-50">
             {busy ? (creating ? 'Creando cuenta…' : 'Entrando…') : creating ? 'Crear cuenta' : 'Entrar'}

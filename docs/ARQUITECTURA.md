@@ -151,7 +151,11 @@ trazado de muros se hace en 2D (es donde se puede dibujar con precisión).
   `…/chunks/<n>` con el documento comprimido con zlib en trozos de ~200 KB, cada
   uno marcado con la versión para detectar guardados incompletos). Mantiene una
   copia en IndexedDB y sube automáticamente los proyectos locales la primera vez.
-* Cuentas web: `worker/index.ts` (Cloudflare Workers + D1) expone `/api/register`,
+* Cuentas web: `worker/index.ts` (Cloudflare Workers; almacenamiento en
+  `worker/store.ts`: Supabase vía su API REST con la clave secreta como secreto
+  del Worker —tablas de `supabase/cuentas.sql`, RLS sin políticas— o D1 si
+  Supabase no está configurado, con migración automática de D1 a Supabase al
+  iniciar sesión) expone `/api/register`,
   `/api/login`, `/api/logout`, `/api/me` y `/api/projects[/id]`. Contraseñas con
   PBKDF2-SHA256 (100 000 iteraciones), sesiones con token aleatorio del que solo
   se guarda el hash, bloqueo progresivo tras 5 fallos y cuotas por proyecto y

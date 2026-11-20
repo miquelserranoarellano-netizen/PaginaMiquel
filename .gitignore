@@ -7,3 +7,5 @@ coverage/
 .vite/
 test-results/
 .wrangler/
+.dev.vars
+.env.local
