@@ -45,6 +45,28 @@ export interface MaterialSlot extends SurfaceMaterial {
   label: string;
 }
 
+export type ParamValue = number | boolean;
+export type ParamValues = Record<string, ParamValue>;
+
+/** Parámetro configurable de un mueble (pulgadas de un televisor, baldas de una estantería…). */
+export interface ParamDef {
+  key: string;
+  label: string;
+  kind: 'number' | 'int' | 'bool';
+  default: ParamValue;
+  min?: number;
+  max?: number;
+  step?: number;
+  unit?: string;
+  hint?: string;
+}
+
+export interface Size3 {
+  w: number;
+  d: number;
+  h: number;
+}
+
 export interface CatalogItem {
   id: string;
   name: string;
@@ -55,7 +77,13 @@ export interface CatalogItem {
   /** Elevación por defecto (cuadros, televisores de pared, lámparas de techo…). */
   elevation?: number;
   slots: Record<string, MaterialSlot>;
-  build: (w: number, d: number, h: number) => Part[];
+  build: (w: number, d: number, h: number, p: ParamValues) => Part[];
+  /** Parámetros configurables. */
+  params?: ParamDef[];
+  /** Medidas que dependen de los parámetros (p. ej. las pulgadas fijan el ancho y alto de una TV). */
+  derive?: (p: ParamValues, current: Size3) => Partial<Size3>;
+  /** Parámetros equivalentes a unas medidas (al redimensionar con los tiradores). */
+  fromSize?: (size: Size3, p: ParamValues) => ParamValues;
   /** Fuente de luz (lámparas). y relativo a la altura total (0..1). */
   light?: { y: number; intensity: number; color: string; distance: number };
   /** Bloquea el paso en el recorrido (por defecto si mide más de 40 cm). */

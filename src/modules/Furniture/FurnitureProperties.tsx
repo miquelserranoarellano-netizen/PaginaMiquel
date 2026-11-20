@@ -10,12 +10,17 @@ import { useEditorStore } from '@/store/editorStore';
 import { projectApi } from '@/store/projectStore';
 import { CATEGORY_LABELS } from './types';
 import { getCatalogItem } from './catalog';
+import { FurnitureConfig, FurnitureFit, derivedKeys } from './FurnitureFit';
+import { useProjectStore } from '@/store/projectStore';
 
 export function FurnitureProperties({ item }: { item: FurnitureItem }) {
   const id = item.id;
   const cat = getCatalogItem(item.catalogId);
   const set = (fn: (f: FurnitureItem) => void) => projectApi.apply((d) => fn(d.furniture[id]));
   const S = LIMITS.furnitureSize;
+  const doc = useProjectStore((st) => st.doc);
+  const derived = derivedKeys(cat, item);
+  const auto = 'Se calcula a partir de la configuración';
   return (
     <>
       <Section title={cat ? CATEGORY_LABELS[cat.category] : 'Objeto'}>
@@ -41,20 +46,21 @@ export function FurnitureProperties({ item }: { item: FurnitureItem }) {
           </div>
         </Field>
       </Section>
+      <FurnitureConfig item={item} />
       <Section title="Dimensiones">
-        <Field label="Ancho">
-          <NumberField value={item.width} min={S.min} max={S.max} unit="m" length onChange={(v) => set((f) => (f.width = v))} />
+        <Field label="Ancho" hint={derived.has('w') ? auto : undefined}>
+          <NumberField value={item.width} min={S.min} max={S.max} unit="m" length disabled={derived.has('w')} title={derived.has('w') ? auto : undefined} onChange={(v) => set((f) => (f.width = v))} />
         </Field>
-        <Field label="Fondo">
-          <NumberField value={item.depth} min={S.min} max={S.max} unit="m" length onChange={(v) => set((f) => (f.depth = v))} />
+        <Field label="Fondo" hint={derived.has('d') ? auto : undefined}>
+          <NumberField value={item.depth} min={S.min} max={S.max} unit="m" length disabled={derived.has('d')} title={derived.has('d') ? auto : undefined} onChange={(v) => set((f) => (f.depth = v))} />
         </Field>
-        <Field label="Alto">
-          <NumberField value={item.height} min={S.min} max={S.max} unit="m" length onChange={(v) => set((f) => (f.height = v))} />
+        <Field label="Alto" hint={derived.has('h') ? auto : undefined}>
+          <NumberField value={item.height} min={S.min} max={S.max} unit="m" length disabled={derived.has('h')} title={derived.has('h') ? auto : undefined} onChange={(v) => set((f) => (f.height = v))} />
         </Field>
         <Field label="Elevación" hint="Altura de la base respecto al suelo">
           <NumberField value={item.elevation} min={0} max={20} unit="m" length onChange={(v) => set((f) => (f.elevation = v))} />
         </Field>
-        {cat && (
+        {cat && !cat.derive && (
           <button
             type="button"
             className="text-[11.5px] text-accent-700 hover:underline"
@@ -70,6 +76,7 @@ export function FurnitureProperties({ item }: { item: FurnitureItem }) {
           </button>
         )}
       </Section>
+      <FurnitureFit doc={doc} item={item} />
       {item.light && (
         <Section title="Luz">
           <Field label="Encendida">

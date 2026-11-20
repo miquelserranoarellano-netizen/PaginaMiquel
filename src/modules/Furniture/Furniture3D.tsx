@@ -12,6 +12,7 @@ import type { PickHandlers } from '@/modules/Walls/Walls3D';
 import { getCatalogItem } from './catalog';
 import type { Part } from './types';
 import { loadAssetModel } from './gltf';
+import { resolveParams } from './params';
 
 function PartMesh({ part, item }: { part: Part; item: FurnitureItem }) {
   const cat = getCatalogItem(item.catalogId);
@@ -34,7 +35,7 @@ function PartMesh({ part, item }: { part: Part; item: FurnitureItem }) {
 
 function CatalogModel({ item }: { item: FurnitureItem }) {
   const cat = getCatalogItem(item.catalogId);
-  const parts = useMemo(() => (cat ? cat.build(item.width, item.depth, item.height) : []), [cat, item.width, item.depth, item.height]);
+  const parts = useMemo(() => (cat ? cat.build(item.width, item.depth, item.height, resolveParams(cat, item.params)) : []), [cat, item.width, item.depth, item.height, item.params]);
   return (
     <>
       {parts.map((p, i) => (

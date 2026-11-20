@@ -51,6 +51,16 @@ se apoyan solos contra las paredes y se pueden mover, girar, redimensionar con
 medidas exactas y cambiar de material y color pieza a pieza. También se pueden
 **importar modelos GLB/GLTF** propios, que se guardan dentro del proyecto.
 
+**Televisores y estanterías configurables.** El televisor se elige por **pulgadas**
+(16:9) y la app calcula la pantalla, la **distancia de visión ideal** (que dibuja
+en el plano como una zona verde delante de la TV), la distancia real al sofá, si
+el tamaño es adecuado (o qué pulgadas recomendaría), la altura del centro de la
+pantalla y si cabe en el mueble de TV. Las estanterías se configuran por medidas,
+**baldas y módulos** (también estantería de cubos y baldas de pared) y se calcula
+el hueco libre, los metros de balda, la capacidad aproximada de libros y si las
+baldas son demasiado largas. Para cualquier mueble avisa si **sobrepasa el techo,
+tapa una puerta o ventana, sobresale de la pared o choca con otro mueble**.
+
 ### Materiales e iluminación
 - Suelos de parquet (lamas y espiga), mármol, cerámica, baldosa hidráulica, hormigón, moqueta, tarima, césped, grava…
 - Paredes con pintura de cualquier color, estuco, ladrillo, piedra, hormigón visto, paneles de madera y azulejo.

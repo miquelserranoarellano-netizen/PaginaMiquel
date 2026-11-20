@@ -12,6 +12,7 @@ import { wallFrame } from '@/modules/Walls/geometry';
 import { addDetectedRoom, addPolygonRoom } from '@/modules/Rooms/ops';
 import { getCatalogItem } from '@/modules/Furniture/catalog';
 import { createFurniture } from '@/modules/Furniture/factory';
+import { tvSize } from '@/modules/Furniture/params';
 import type { FurnitureItem } from '@/modules/FloorPlan/types';
 
 const PAINT: SurfaceMaterial = { materialId: 'pintura', color: '#f3f1ec' };
@@ -171,15 +172,16 @@ export function createSampleHouse(): ProjectDoc {
   put('painting', 6.0, 4.08, 0, { width: 1.2, height: 0.5 });
   // Salón comedor
   put('tv-stand', 6.73, 9.3, 90);
-  put('tv-55', 6.73, 9.3, 90);
-  put('sofa-3', 3.0, 9.3, 270);
-  put('coffee-table', 4.45, 9.3, 90);
+  const tv = tvSize(75, true);
+  put('tv-55', 6.73, 9.3, 90, { name: 'Televisor 75"', params: { inches: 75 }, width: tv.w, depth: tv.d, height: tv.h });
+  put('sofa-3', 3.55, 9.3, 270);
+  put('coffee-table', 4.55, 9.3, 90);
   put('rug', 4.2, 9.3, 90, { width: 2.6, depth: 1.8 });
   put('armchair', 4.5, 10.35, 180, { rotation: 225 });
   put('floor-lamp', 2.3, 10.55);
   put('outdoor-dining', 2.4, 7.0, 0, { name: 'Mesa de comedor con sillas' });
   put('pendant', 2.4, 7.0);
-  put('bookshelf', 1.2, 5.64);
+  put('bookshelf', 1.3, 5.64, 0, { width: 1.6, params: { levels: 5, columns: 2, back: true, books: true } });
   put('plant', 6.5, 10.4);
   put('plant', 0.55, 10.45);
   put('sideboard', 5.6, 5.7);

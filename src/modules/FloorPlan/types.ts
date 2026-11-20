@@ -129,6 +129,8 @@ export interface FurnitureItem {
   assetId?: ID;
   /** Para lámparas: encendida y potencia relativa. */
   light?: { on: boolean; intensity: number; color: string };
+  /** Parámetros del mueble (pulgadas, número de baldas…). */
+  params?: Record<string, number | boolean>;
 }
 
 /** Cota (línea de medida) persistente. */

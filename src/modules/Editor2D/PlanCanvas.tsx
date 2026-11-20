@@ -25,6 +25,7 @@ import { OpeningTool } from './tools/OpeningTool';
 import { MeasureTool } from './tools/MeasureTool';
 import { FurnitureTool } from './tools/FurnitureTool';
 import { PlanOverlays } from './PlanOverlays';
+import { FurnitureGuides2D } from '@/modules/Furniture/FurnitureGuides2D';
 
 export const DRAG_MIME = 'application/x-homedesign-catalog';
 
@@ -262,6 +263,7 @@ export function PlanCanvas() {
             {plan.grid && <GridLayer vp={viewport} size={size} gridSize={gridSize} />}
             {plan.lowerLevel && lower && <UnderlayDrawing doc={doc} levelId={lower.id} />}
             <PlanDrawing doc={doc} levelId={activeLevelId} zoom={viewport.zoom} options={plan} />
+            <FurnitureGuides2D doc={doc} selection={selection} zoom={viewport.zoom} />
             <SelectionOverlay doc={doc} selection={selection} hover={tool === 'select' ? hover : null} zoom={viewport.zoom} />
             <PlanContext.Provider value={ctx}>
               <ActiveTool key={tool} tool={tool} />

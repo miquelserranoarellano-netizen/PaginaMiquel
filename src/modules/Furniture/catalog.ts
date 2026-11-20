@@ -2,7 +2,8 @@
  * Catálogo de muebles y objetos. Cada elemento se construye con piezas
  * paramétricas (ver types.ts) a partir de su ancho (w), fondo (d) y alto (h).
  */
-import type { CatalogItem, FurnitureCategory, MaterialSlot, Part } from './types';
+import type { CatalogItem, FurnitureCategory, MaterialSlot, ParamValues, Part } from './types';
+import { SHELF_T, TV_BEZEL, TV_STAND_H, inchesFromWidth, pbool, pint, pnum, tvSize } from './params';
 
 type V3 = [number, number, number];
 const H = Math.PI / 2;
@@ -145,6 +146,74 @@ function books(w: number, y: number, z: number, depth: number, height: number, s
   return parts;
 }
 
+/** Estantería con baldas y módulos configurables. */
+function shelving(w: number, d: number, h: number, p: ParamValues): Part[] {
+  const t = SHELF_T;
+  const levels = pint(p, 'levels', 5, 1, 12);
+  const columns = pint(p, 'columns', 1, 1, 8);
+  const withBooks = pbool(p, 'books', true);
+  const parts: Part[] = [];
+  if (pbool(p, 'back', true)) parts.push(B(0, 0, -d / 2 + 0.005, w, h, 0.01, 'primary'));
+  const cw = (w - t * (columns + 1)) / columns;
+  for (let c = 0; c <= columns; c++) parts.push(B(-w / 2 + t / 2 + c * (cw + t), 0, 0, t, h, d, 'primary'));
+  const ch = (h - t * (levels + 1)) / levels;
+  for (let i = 0; i <= levels; i++) {
+    const y = i * (ch + t);
+    parts.push(B(0, y, 0, w - 2 * t, t, d, 'primary'));
+    if (i < levels && withBooks && ch > 0.12)
+      for (let c = 0; c < columns; c++) {
+        const cx = -w / 2 + t + c * (cw + t) + cw / 2;
+        parts.push(...books(cw, y + t, 0, d * 0.75, Math.min(0.3, ch - 0.03), i * 13 + c * 7 + 7).map((b) => ({ ...b, p: [b.p[0] + cx, b.p[1], b.p[2]] as V3 })));
+      }
+  }
+  return parts;
+}
+
+const CUBE = 0.335;
+const CUBE_T = 0.039;
+const cubeSpan = (n: number) => Math.round((n * CUBE + (n + 1) * CUBE_T) * 1000) / 1000;
+
+/** Estantería de cubos (tipo módulo cuadrado), opcionalmente con cajas de tela. */
+function cubeShelf(w: number, d: number, h: number, p: ParamValues): Part[] {
+  const rows = pint(p, 'rows', 4, 1, 6);
+  const cols = pint(p, 'cols', 4, 1, 6);
+  const t = CUBE_T;
+  const cw = (w - t * (cols + 1)) / cols;
+  const ch = (h - t * (rows + 1)) / rows;
+  const parts: Part[] = [];
+  for (let c = 0; c <= cols; c++) parts.push(B(-w / 2 + t / 2 + c * (cw + t), 0, 0, t, h, d, 'primary'));
+  for (let r = 0; r <= rows; r++) parts.push(B(0, r * (ch + t), 0, w - 2 * t, t, d, 'primary'));
+  if (pbool(p, 'boxes', true)) {
+    let k = 0;
+    for (let r = 0; r < rows; r++)
+      for (let c = 0; c < cols; c++) {
+        k++;
+        const x = -w / 2 + t + c * (cw + t) + cw / 2;
+        const y = t + r * (ch + t);
+        if ((r * 3 + c * 5) % 4 === 0) parts.push({ ...R(x, y, 0.02, cw - 0.02, ch - 0.02, d - 0.06, 'boxes', 0.02), noPlan: true });
+        else if (k % 3 === 0) parts.push(...books(cw, y, 0, d * 0.7, Math.min(0.28, ch - 0.03), k * 11).map((b) => ({ ...b, p: [b.p[0] + x, b.p[1], b.p[2]] as V3 })));
+      }
+  }
+  return parts;
+}
+
+/** Baldas flotantes de pared con separación configurable. */
+function wallShelves(w: number, d: number, p: ParamValues): Part[] {
+  const count = pint(p, 'count', 3, 1, 8);
+  const spacing = pnum(p, 'spacing', 0.35);
+  const parts: Part[] = [];
+  for (let i = 0; i < count; i++) {
+    const y = i * spacing;
+    parts.push(B(0, y, 0, w, 0.03, d, 'primary'));
+    if (!pbool(p, 'decor', true) || spacing < 0.15) continue;
+    const bh = Math.min(0.26, spacing - 0.06);
+    if (i % 2 === 0) parts.push(...books(w * 0.55, y + 0.03, 0, d * 0.8, bh, i * 17 + 3).map((b) => ({ ...b, p: [b.p[0] - w * 0.2, b.p[1], b.p[2]] as V3 })));
+    else parts.push(...books(w * 0.4, y + 0.03, 0, d * 0.8, bh, i * 17 + 3).map((b) => ({ ...b, p: [b.p[0] + w * 0.25, b.p[1], b.p[2]] as V3 })));
+    parts.push({ ...S(i % 2 === 0 ? w * 0.32 : -w * 0.3, y + 0.03 + Math.min(0.09, bh * 0.4), 0, Math.min(0.12, d * 0.6), Math.min(0.18, bh * 0.8), Math.min(0.12, d * 0.6), 'decor'), noPlan: true });
+  }
+  return parts;
+}
+
 const BOOKS = { book1: slot('Libros 1', 'plastico', '#9b4a3c'), book2: slot('Libros 2', 'plastico', '#3d5a73'), book3: slot('Libros 3', 'plastico', '#d8c9a3') };
 
 export const CATALOG: CatalogItem[] = [
@@ -253,17 +322,48 @@ export const CATALOG: CatalogItem[] = [
     d: 0.35,
     h: 2.0,
     slots: { primary: WOOD(), ...BOOKS },
-    build: (w, d, h) => {
-      const t = 0.025;
-      const shelves = Math.max(2, Math.round(h / 0.38));
-      const parts: Part[] = [B(-w / 2 + t / 2, 0, 0, t, h, d, 'primary'), B(w / 2 - t / 2, 0, 0, t, h, d, 'primary'), B(0, 0, -d / 2 + 0.005, w, h, 0.01, 'primary')];
-      for (let i = 0; i <= shelves; i++) {
-        const y = Math.min(h - t, (h / shelves) * i);
-        parts.push(B(0, y, 0, w - 2 * t, t, d, 'primary'));
-        if (i < shelves) parts.push(...books(w - 2 * t, y + t, 0, d * 0.75, h / shelves - 0.08, i * 13 + 7));
-      }
-      return parts;
-    },
+    params: [
+      { key: 'levels', label: 'Baldas', kind: 'int', default: 5, min: 1, max: 12, hint: 'Número de huecos en altura' },
+      { key: 'columns', label: 'Módulos', kind: 'int', default: 1, min: 1, max: 8, hint: 'Columnas separadas por montantes' },
+      { key: 'back', label: 'Con trasera', kind: 'bool', default: true },
+      { key: 'books', label: 'Con libros', kind: 'bool', default: true },
+    ],
+    build: (w, d, h, p) => shelving(w, d, h, p),
+  },
+  {
+    id: 'cube-shelf',
+    name: 'Estantería de cubos',
+    category: 'armarios',
+    w: 1.47,
+    d: 0.39,
+    h: 1.47,
+    slots: { primary: LACQ('#f4f4f1'), boxes: slot('Cajas', 'tela', '#b9b2a6'), ...BOOKS },
+    params: [
+      { key: 'rows', label: 'Filas', kind: 'int', default: 4, min: 1, max: 6 },
+      { key: 'cols', label: 'Columnas', kind: 'int', default: 4, min: 1, max: 6 },
+      { key: 'boxes', label: 'Con cajas', kind: 'bool', default: true },
+    ],
+    derive: (p) => ({ w: cubeSpan(pint(p, 'cols', 4, 1, 6)), h: cubeSpan(pint(p, 'rows', 4, 1, 6)) }),
+    fromSize: (s) => ({ cols: Math.max(1, Math.min(6, Math.round((s.w - CUBE_T) / (CUBE + CUBE_T)))), rows: Math.max(1, Math.min(6, Math.round((s.h - CUBE_T) / (CUBE + CUBE_T)))) }),
+    build: (w, d, h, p) => cubeShelf(w, d, h, p),
+  },
+  {
+    id: 'wall-shelves',
+    name: 'Baldas de pared',
+    category: 'armarios',
+    w: 1.2,
+    d: 0.25,
+    h: 0.73,
+    elevation: 1.1,
+    slots: { primary: WOOD(), decor: slot('Decoración', 'porcelana', '#e9e2d4'), ...BOOKS },
+    blocks: false,
+    params: [
+      { key: 'count', label: 'Baldas', kind: 'int', default: 3, min: 1, max: 8 },
+      { key: 'spacing', label: 'Separación', kind: 'number', default: 0.35, min: 0.15, max: 0.8, step: 0.01, unit: 'm' },
+      { key: 'decor', label: 'Con objetos', kind: 'bool', default: true, hint: 'Libros y decoración' },
+    ],
+    derive: (p) => ({ h: Math.round(((pint(p, 'count', 3, 1, 8) - 1) * pnum(p, 'spacing', 0.35) + 0.03) * 1000) / 1000 }),
+    build: (w, d, _h, p) => wallShelves(w, d, p),
   },
   { id: 'sideboard', name: 'Aparador', category: 'armarios', w: 1.8, d: 0.45, h: 0.75, slots: { primary: WOOD('#5f3f29', 'madera-nogal'), secondary: METAL('#c9a24f', 'laton') }, build: (w, d, h) => drawers(w, d, h - 0.15, 1, 3, 0).map((p) => ({ ...p, p: [p.p[0], p.p[1] + 0.15, p.p[2]] as V3 })).concat(legs(w, d, 0.15, 0.03, 'secondary', 0.05)) },
   { id: 'dresser', name: 'Cómoda', category: 'armarios', w: 1.0, d: 0.5, h: 0.85, slots: { primary: LACQ('#f4f4f1'), secondary: WOOD() }, build: (w, d, h) => drawers(w, d, h, 4, 1) },
@@ -295,8 +395,35 @@ export const CATALOG: CatalogItem[] = [
   },
 
   // ── Televisores ────────────────────────────────────────
-  { id: 'tv-55', name: 'Televisor 55"', category: 'televisores', w: 1.23, d: 0.25, h: 0.78, elevation: 0.5, slots: { primary: METAL(), screen: SCREEN() }, blocks: false, build: (w, d, h) => [B(0, 0.08, 0, w, h - 0.08, 0.05, 'primary'), B(0, 0.09, 0.026, w - 0.02, h - 0.1, 0.002, 'screen'), B(-w * 0.35, 0, 0, 0.05, 0.08, d, 'primary'), B(w * 0.35, 0, 0, 0.05, 0.08, d, 'primary')] },
-  { id: 'tv-65-wall', name: 'Televisor 65" de pared', category: 'televisores', w: 1.45, d: 0.06, h: 0.84, elevation: 1.0, slots: { primary: METAL(), screen: SCREEN() }, blocks: false, build: (w, d, h) => [B(0, 0, 0, w, h, d, 'primary'), B(0, 0.01, d / 2, w - 0.02, h - 0.02, 0.002, 'screen')] },
+  {
+    id: 'tv-55',
+    name: 'Televisor con peana',
+    category: 'televisores',
+    ...tvSize(55, true),
+    elevation: 0.5,
+    slots: { primary: METAL(), screen: SCREEN() },
+    blocks: false,
+    params: [{ key: 'inches', label: 'Pulgadas', kind: 'int', default: 55, min: 24, max: 110, unit: '"', hint: 'Diagonal de la pantalla (formato 16:9)' }],
+    derive: (p) => tvSize(pint(p, 'inches', 55, 24, 110), true),
+    fromSize: (s) => ({ inches: inchesFromWidth(s.w) }),
+    build: (w, d, h) => {
+      const sw = Math.min(0.6, w * 0.32);
+      return [B(0, TV_STAND_H, 0, w, h - TV_STAND_H, 0.045, 'primary'), B(0, TV_STAND_H + TV_BEZEL, 0.0235, w - 2 * TV_BEZEL, h - TV_STAND_H - 2 * TV_BEZEL, 0.002, 'screen'), B(0, 0, -0.01, sw, 0.012, d * 0.9, 'primary'), B(0, 0.012, -0.03, 0.06, TV_STAND_H, 0.04, 'primary')];
+    },
+  },
+  {
+    id: 'tv-65-wall',
+    name: 'Televisor de pared',
+    category: 'televisores',
+    ...tvSize(65, false),
+    elevation: 0.95,
+    slots: { primary: METAL(), screen: SCREEN() },
+    blocks: false,
+    params: [{ key: 'inches', label: 'Pulgadas', kind: 'int', default: 65, min: 24, max: 110, unit: '"', hint: 'Diagonal de la pantalla (formato 16:9)' }],
+    derive: (p) => tvSize(pint(p, 'inches', 65, 24, 110), false),
+    fromSize: (s) => ({ inches: inchesFromWidth(s.w) }),
+    build: (w, d, h) => [B(0, 0, 0, w, h, d, 'primary'), B(0, TV_BEZEL, d / 2, w - 2 * TV_BEZEL, h - 2 * TV_BEZEL, 0.002, 'screen')],
+  },
   { id: 'tv-stand', name: 'Mueble de TV', category: 'televisores', w: 1.8, d: 0.42, h: 0.5, slots: { primary: WOOD('#5f3f29', 'madera-nogal'), secondary: LACQ('#f4f4f1') }, build: (w, d, h) => [B(0, 0.1, 0, w, h - 0.1, d, 'primary'), B(-w / 4, 0.12, d / 2, w / 2 - 0.02, h - 0.14, 0.01, 'secondary'), B(w / 4, 0.12, d / 2, w / 2 - 0.02, h - 0.14, 0.01, 'secondary'), ...legs(w, d, 0.1, 0.03, 'primary', 0.06)] },
   { id: 'soundbar', name: 'Barra de sonido', category: 'televisores', w: 0.9, d: 0.1, h: 0.07, elevation: 0.5, slots: { primary: METAL() }, blocks: false, build: (w, d, h) => [R(0, 0, 0, w, h, d, 'primary', 0.02)] },
 

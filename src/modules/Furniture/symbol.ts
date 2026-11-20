@@ -4,7 +4,8 @@
  * verticales, envolvente convexa para el resto).
  */
 import { convexHull } from '@/core/geometry';
-import type { CatalogItem, Part } from './types';
+import type { CatalogItem, ParamValues, Part } from './types';
+import { resolveParams } from './params';
 
 export type SymbolShape =
   | { kind: 'poly'; points: string; slot: string; top: number }
@@ -52,12 +53,13 @@ function partShape(p: Part): SymbolShape | null {
 
 const cache = new Map<string, SymbolShape[]>();
 
-export function furnitureSymbol(item: CatalogItem, w: number, d: number, h: number): SymbolShape[] {
-  const key = `${item.id}|${w.toFixed(3)}|${d.toFixed(3)}|${h.toFixed(3)}`;
+export function furnitureSymbol(item: CatalogItem, w: number, d: number, h: number, params?: ParamValues): SymbolShape[] {
+  const p = resolveParams(item, params);
+  const key = `${item.id}|${w.toFixed(3)}|${d.toFixed(3)}|${h.toFixed(3)}|${JSON.stringify(p)}`;
   let shapes = cache.get(key);
   if (!shapes) {
     shapes = item
-      .build(w, d, h)
+      .build(w, d, h, p)
       .filter((p) => !p.noPlan)
       .map(partShape)
       .filter((s): s is SymbolShape => !!s)

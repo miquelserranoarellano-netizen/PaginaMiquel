@@ -5,6 +5,8 @@ import type { ID, ProjectDoc } from '@/modules/FloorPlan/types';
 import { moveWallEndpoint, clampOpenings } from '@/modules/Walls/ops';
 import { nearestWall, wallFrame } from '@/modules/Walls/geometry';
 import type { Handle } from './handles';
+import { getCatalogItem } from '@/modules/Furniture/catalog';
+import { resolveParams } from '@/modules/Furniture/params';
 
 export interface HandleInput {
   /** Punto ya ajustado (snap). */
@@ -51,6 +53,15 @@ export function applyHandle(doc: ProjectDoc, h: Handle, inp: HandleInput): void 
       if (inp.snap) {
         w = Math.max(0.05, roundTo(w, 0.05));
         d = Math.max(0.05, roundTo(d, 0.05));
+      }
+      const cat = getCatalogItem(f.catalogId);
+      if (cat?.fromSize && cat.derive) {
+        const params = { ...resolveParams(cat, f.params), ...cat.fromSize({ w, d, h: f.height }, resolveParams(cat, f.params)) };
+        const dims = cat.derive(params, { w, d, h: f.height });
+        w = dims.w ?? w;
+        d = dims.d ?? d;
+        if (dims.h !== undefined) f.height = dims.h;
+        f.params = params;
       }
       const centerLocal = { x: opp.x + (signs[0] * w) / 2, y: opp.y + (signs[1] * d) / 2 };
       f.position = cleanVec(add(f.position, rotate(centerLocal, rad)));

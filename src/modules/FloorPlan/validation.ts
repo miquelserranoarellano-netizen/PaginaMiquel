@@ -160,6 +160,8 @@ export function normalizeProject(raw: unknown): NormalizeResult {
     }
     const materials: Record<string, SurfaceMaterial> = {};
     if (isObj(v.materials)) for (const [k, m] of Object.entries(v.materials)) materials[k] = mat(m, { materialId: 'plastico', color: '#e9e9e7' });
+    const params: Record<string, number | boolean> = {};
+    if (isObj(v.params)) for (const [k, val] of Object.entries(v.params)) if (typeof val === 'number' || typeof val === 'boolean') params[k] = val;
     const light = isObj(v.light) ? { on: v.light.on !== false, intensity: num(v.light.intensity, 1, 0, 10), color: str(v.light.color, '#ffe9c4') } : undefined;
     doc.furniture[id] = {
       id,
@@ -175,6 +177,7 @@ export function normalizeProject(raw: unknown): NormalizeResult {
       materials,
       ...(typeof v.assetId === 'string' ? { assetId: v.assetId } : {}),
       ...(light ? { light } : {}),
+      ...(Object.keys(params).length ? { params } : {}),
     };
   }
   for (const [id, v] of Object.entries(isObj(src.dimensions) ? src.dimensions : {})) {

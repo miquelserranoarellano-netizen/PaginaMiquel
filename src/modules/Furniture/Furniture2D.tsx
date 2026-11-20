@@ -6,7 +6,7 @@ import { furnitureSymbol } from './symbol';
 
 const STROKE = '#5b6670';
 
-export function FurnitureSymbol({ item }: { item: Pick<FurnitureItem, 'catalogId' | 'width' | 'depth' | 'height' | 'materials' | 'name' | 'assetId'> }) {
+export function FurnitureSymbol({ item }: { item: Pick<FurnitureItem, 'catalogId' | 'width' | 'depth' | 'height' | 'materials' | 'name' | 'assetId' | 'params'> }) {
   const cat = getCatalogItem(item.catalogId);
   if (!cat || item.assetId) {
     const fs = Math.min(item.width, item.depth) * 0.22;
@@ -21,7 +21,7 @@ export function FurnitureSymbol({ item }: { item: Pick<FurnitureItem, 'catalogId
       </g>
     );
   }
-  const shapes = furnitureSymbol(cat, item.width, item.depth, item.height);
+  const shapes = furnitureSymbol(cat, item.width, item.depth, item.height, item.params);
   const fill = (slot: string) => {
     const m = item.materials[slot] ?? cat.slots[slot];
     if (!m) return '#ffffff';
